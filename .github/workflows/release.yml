@@ -76,9 +76,9 @@ jobs:
       run: |
         $version = "${{ steps.version.outputs.VERSION }}"
         $pkg = Get-ChildItem artifacts/*.nupkg | Select-Object -First 1
-        $isPrerelease = $version -match '-'
-        $prereleaseFlag = if ($isPrerelease) { "--prerelease" } else { "" }
-        gh release create "v$version" $pkg.FullName --title "GeoMagSharp $version" --generate-notes $prereleaseFlag
+        $args = @("release", "create", "v$version", $pkg.FullName, "--title", "GeoMagSharp $version", "--generate-notes")
+        if ($version -match '-') { $args += "--prerelease" }
+        & gh @args
 
     - name: Upload NuGet artifact
       uses: actions/upload-artifact@v4
