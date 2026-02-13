@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>1.4.0</VersionPrefix>
+    <Authors>Christopher Strecker</Authors>
+    <Company>Christopher Strecker</Company>
+    <Product>GeoMagSharp</Product>
+    <Copyright>Copyright (c) 2014-2026 Christopher Strecker</Copyright>
+    <Description>GeoMag # is a C# port of the C++ application GeoMag 7.0 distributed by NOAA. Supports WMM, WMMHR, IGRF, EMM, and BGGM geomagnetic models for calculating magnetic declination, inclination, and field strength.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/StreckerCM/GeoMagSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/StreckerCM/GeoMagSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>geomagnetic;wmm;igrf;emm;bggm;wmmhr;magnetic-declination;spherical-harmonics;noaa;geophysics</PackageTags>
+  </PropertyGroup>
+</Project>

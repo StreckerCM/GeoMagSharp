@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoMagSharp", "src\GeoMagSharp\GeoMagSharp.csproj", "{AE04340D-E45E-4BDC-942A-58BD0424CEFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoMagSharp.Tests", "tests\GeoMagSharp.Tests\GeoMagSharp.Tests.csproj", "{B1C2D3E4-F5A6-7890-ABCD-EF1234567890}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AE04340D-E45E-4BDC-942A-58BD0424CEFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE04340D-E45E-4BDC-942A-58BD0424CEFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE04340D-E45E-4BDC-942A-58BD0424CEFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE04340D-E45E-4BDC-942A-58BD0424CEFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1C2D3E4-F5A6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1C2D3E4-F5A6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1C2D3E4-F5A6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1C2D3E4-F5A6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,18 @@
+# Auto detect text files and normalise line endings
+* text=auto
+
+# Source files
+*.cs text diff=csharp
+*.csproj text
+*.sln text eol=crlf
+*.props text
+*.targets text
+
+# Documentation
+*.md text
+*.txt text
+
+# Binary files
+*.COF binary
+*.DAT binary
+*.nupkg binary
