@@ -63,7 +63,10 @@ jobs:
 
     - name: Push to NuGet.org
       if: github.ref_type == 'tag'
-      run: dotnet nuget push artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      shell: pwsh
+      run: |
+        $pkg = Get-ChildItem artifacts/*.nupkg | Select-Object -First 1
+        dotnet nuget push $pkg.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
     - name: Create GitHub Release
       if: github.ref_type == 'tag'
@@ -72,9 +75,10 @@ jobs:
       shell: pwsh
       run: |
         $version = "${{ steps.version.outputs.VERSION }}"
+        $pkg = Get-ChildItem artifacts/*.nupkg | Select-Object -First 1
         $isPrerelease = $version -match '-'
         $prereleaseFlag = if ($isPrerelease) { "--prerelease" } else { "" }
-        gh release create "v$version" artifacts/*.nupkg --title "GeoMagSharp $version" --generate-notes $prereleaseFlag
+        gh release create "v$version" $pkg.FullName --title "GeoMagSharp $version" --generate-notes $prereleaseFlag
 
     - name: Upload NuGet artifact
       uses: actions/upload-artifact@v4
