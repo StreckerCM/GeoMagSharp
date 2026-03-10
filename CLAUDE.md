@@ -61,6 +61,13 @@ feature/* ─────── Feature development work
 4. PR `preview` to `master` for releases
 5. Tag `master` with `vX.Y.Z` to trigger NuGet publish
 
+### Versioning Rules — NEVER VIOLATE
+
+- **Version is set in `Directory.Build.props`** → `<VersionPrefix>X.Y.Z</VersionPrefix>` (single source of truth)
+- **After every release, the version number MUST be incremented.** If v1.4.0 is released, ALL subsequent builds must have a higher version (e.g., v1.5.0 or v1.4.1). Never reuse a released version number.
+- **Bump version on the first feature branch after a release.** Check the current `VersionPrefix` and increment it before any code changes.
+- **Use semantic versioning:** MAJOR = breaking API changes, MINOR = new features (backward compatible), PATCH = bug fixes.
+
 ### Branch Protection Rules — NEVER VIOLATE
 
 - **NEVER commit directly to `master`.** All changes to `master` must come through reviewed and approved PRs from `preview`.
