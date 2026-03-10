@@ -346,5 +346,92 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region Integration Tests
+
+        private static string FindWMM2025Path()
+        {
+            var possiblePaths = new[]
+            {
+                System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "TestData"),
+                System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "..", "..", "TestData"),
+                System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "tests", "GeoMagSharp.Tests", "TestData"),
+                @"C:\GitHub\GeoMagSharp\tests\GeoMagSharp.Tests\TestData"
+            };
+
+            foreach (var path in possiblePaths)
+            {
+                var candidate = System.IO.Path.GetFullPath(System.IO.Path.Combine(path, "WMM2025.COF"));
+                if (System.IO.File.Exists(candidate))
+                    return candidate;
+            }
+            return null;
+        }
+
+        [TestMethod]
+        public void Integration_WMMCalculation_HasLowResolutionUncertainty()
+        {
+            // Arrange — load WMM2025 and run a spot calculation
+            var filePath = FindWMM2025Path();
+            if (filePath == null)
+                Assert.Inconclusive("WMM2025.COF not found in TestData folder");
+
+            var geoMag = new GeoMagSharp.GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new GeoMagSharp.CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new System.DateTime(2025, 1, 1)
+            };
+            options.SetElevation(0, GeoMagSharp.Distance.Unit.meter);
+
+            // Act
+            geoMag.MagneticCalculations(options);
+
+            // Assert
+            Assert.IsTrue(geoMag.ResultsOfCalculation.Count > 0);
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.Uncertainty);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.Uncertainty.ModelCategory);
+            Assert.AreEqual(0.36, result.Uncertainty.Declination, 0.001);
+            Assert.AreEqual(5000, result.Uncertainty.BhDependentDec, 0.1);
+            Assert.AreEqual(157, result.Uncertainty.TotalField, 0.1);
+            Assert.AreEqual(0.24, result.Uncertainty.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void Integration_WMMCalculation_WithIFROverride_HasIFR1Uncertainty()
+        {
+            // Arrange — load WMM but override to IFR1
+            var filePath = FindWMM2025Path();
+            if (filePath == null)
+                Assert.Inconclusive("WMM2025.COF not found in TestData folder");
+
+            var geoMag = new GeoMagSharp.GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new GeoMagSharp.CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new System.DateTime(2025, 1, 1),
+                ModelCategoryOverride = GeoMagSharp.GeomagneticModelCategory.InFieldReference1
+            };
+            options.SetElevation(0, GeoMagSharp.Distance.Unit.meter);
+
+            // Act
+            geoMag.MagneticCalculations(options);
+
+            // Assert
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.Uncertainty);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.InFieldReference1, result.Uncertainty.ModelCategory);
+            Assert.AreEqual(0.15, result.Uncertainty.Declination, 0.001);
+            Assert.AreEqual(1500, result.Uncertainty.BhDependentDec, 0.1);
+        }
+
+        #endregion
     }
 }
