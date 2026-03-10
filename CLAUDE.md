@@ -30,11 +30,15 @@ dotnet pack src/GeoMagSharp/GeoMagSharp.csproj -c Release -o artifacts
 ## Branching Strategy
 
 ```
-master ←──────── Stable releases
+master ←──────── Stable releases (NuGet publish on vX.Y.Z tag)
   ↑
   │ PR merge
   │
-preview ←─────── Pre-release testing and development
+preview ←─────── Pre-release testing
+  ↑
+  │ PR merge
+  │
+development ←─── Integration branch for feature work
   ↑
   │ PR merge
   │
@@ -46,19 +50,22 @@ feature/* ─────── Feature development work
 | Branch | Purpose | Description |
 |--------|---------|-------------|
 | `master` | Production releases | Stable release builds, NuGet publishes |
-| `preview` | Development | Integration testing before release |
+| `preview` | Pre-release testing | Integration testing before release |
+| `development` | Development | Feature integration, CI builds |
 | `feature/*` | Feature work | Development branches for new features |
 
 ### Workflow
-1. Create feature branches from `preview`
-2. PR feature branches to `preview` for integration
-3. PR `preview` to `master` for releases
-4. Tag `master` with `vX.Y.Z` to trigger NuGet publish
+1. Create feature branches from `development`
+2. PR feature branches to `development` for integration
+3. PR `development` to `preview` for pre-release testing
+4. PR `preview` to `master` for releases
+5. Tag `master` with `vX.Y.Z` to trigger NuGet publish
 
 ### Branch Protection Rules — NEVER VIOLATE
 
 - **NEVER commit directly to `master`.** All changes to `master` must come through reviewed and approved PRs from `preview`.
-- **NEVER commit directly to `preview`.** All changes to `preview` must come through PRs from `feature/*` branches.
+- **NEVER commit directly to `preview`.** All changes to `preview` must come through PRs from `development`.
+- **NEVER commit directly to `development`.** All changes to `development` must come through PRs from `feature/*` branches.
 - **NEVER push directly to protected branches.** No force-pushes, no direct commits, no exceptions.
 - **NEVER create or merge a PR without explicit user confirmation.** Always ask the user before creating a PR and before merging one. Draft PRs are acceptable without confirmation, but converting to ready-for-review or merging requires approval.
 - **All development work happens on `feature/*` branches.** This is the only place where direct commits are allowed.
@@ -129,8 +136,8 @@ Every feature must have a corresponding GitHub issue before work begins.
 ### Step 2: Create and Switch to a Feature Branch
 
 ```bash
-git checkout preview
-git pull origin preview
+git checkout development
+git pull origin development
 git checkout -b feature/<issue-number>-<short-description>
 ```
 
@@ -202,7 +209,7 @@ Use the Ralph Wiggum loop with the rotating persona pattern defined in `docs/pro
 Before starting any Ralph Loop, verify:
 
 - [ ] GitHub issue exists for this feature
-- [ ] Feature branch created from `preview`
+- [ ] Feature branch created from `development`
 - [ ] `docs/features/<feature>/tasks.md` exists with task breakdown
 - [ ] PR created (draft is fine) to track work
 
