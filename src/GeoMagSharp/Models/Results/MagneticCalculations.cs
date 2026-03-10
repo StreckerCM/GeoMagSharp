@@ -29,6 +29,7 @@ namespace GeoMagSharp
             EastComp = new MagneticValue();
             VerticalComp = new MagneticValue();
             TotalField = new MagneticValue();
+            Uncertainty = null;
         }
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace GeoMagSharp
             EastComp = new MagneticValue(other.EastComp);
             VerticalComp = new MagneticValue(other.VerticalComp);
             TotalField = new MagneticValue(other.TotalField);
+            Uncertainty = other.Uncertainty; // Reference copy — uncertainty is immutable per calculation
         }
 
         /// <summary>
@@ -143,6 +145,12 @@ namespace GeoMagSharp
         /// Total field intensity
         /// </summary>
         public MagneticValue TotalField { get; set; }
+
+        /// <summary>
+        /// ISCWSA-based 1-sigma geomagnetic uncertainty for this calculation.
+        /// Null if model category is Unknown and no override was provided.
+        /// </summary>
+        public GeomagneticUncertainty Uncertainty { get; set; }
 
         #endregion
     }

@@ -273,5 +273,47 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region MagneticCalculations Tests
+
+        [TestMethod]
+        public void MagneticCalculations_CopyConstructor_CopiesUncertainty()
+        {
+            // Arrange
+            var original = new GeoMagSharp.MagneticCalculations();
+            original.Uncertainty = new GeoMagSharp.GeomagneticUncertainty
+            {
+                ModelCategory = GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                Declination = 0.36,
+                BhDependentDec = 5000,
+                TotalField = 157,
+                DipAngle = 0.24,
+                Revision = "Rev5.13"
+            };
+
+            // Act
+            var copy = new GeoMagSharp.MagneticCalculations(original);
+
+            // Assert
+            Assert.IsNotNull(copy.Uncertainty);
+            Assert.AreEqual(0.36, copy.Uncertainty.Declination, 0.001);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, copy.Uncertainty.ModelCategory);
+        }
+
+        [TestMethod]
+        public void MagneticCalculations_CopyConstructor_HandlesNullUncertainty()
+        {
+            // Arrange
+            var original = new GeoMagSharp.MagneticCalculations();
+            // Uncertainty is null by default
+
+            // Act
+            var copy = new GeoMagSharp.MagneticCalculations(original);
+
+            // Assert
+            Assert.IsNull(copy.Uncertainty);
+        }
+
+        #endregion
     }
 }
