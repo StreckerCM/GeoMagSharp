@@ -81,5 +81,170 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region UncertaintyDataProvider Tests
+
+        [TestMethod]
+        public void GetModelCategory_WMM_ReturnsLowResolution()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.WMM, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_IGRF_ReturnsLowResolution()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.IGRF, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_DGRF_ReturnsLowResolution()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.DGRF, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_EMM_ReturnsHighResolution()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.HighResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.EMM, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_WMMHR_ReturnsHighResolution()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.HighResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.WMMHR, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_NONE_ReturnsUnknown()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.Unknown,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(GeoMagSharp.knownModels.NONE, null));
+        }
+
+        [TestMethod]
+        public void GetModelCategory_OverrideWins()
+        {
+            Assert.AreEqual(
+                GeoMagSharp.GeomagneticModelCategory.HighResolution,
+                GeoMagSharp.UncertaintyDataProvider.GetModelCategory(
+                    GeoMagSharp.knownModels.WMM,
+                    GeoMagSharp.GeomagneticModelCategory.HighResolution));
+        }
+
+        [TestMethod]
+        public void GetUncertainty_LowResolution_MatchesCDRSM03()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.WMM, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.ModelCategory);
+            Assert.AreEqual(0.36, result.Declination, 0.001);
+            Assert.AreEqual(5000, result.BhDependentDec, 0.1);
+            Assert.AreEqual(157, result.TotalField, 0.1);
+            Assert.AreEqual(0.24, result.DipAngle, 0.001);
+            Assert.AreEqual("Rev5.13", result.Revision);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_HighResolution_MatchesCDRSM03()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.EMM, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.HighResolution, result.ModelCategory);
+            Assert.AreEqual(0.30, result.Declination, 0.001);
+            Assert.AreEqual(4118, result.BhDependentDec, 0.1);
+            Assert.AreEqual(107, result.TotalField, 0.1);
+            Assert.AreEqual(0.16, result.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_StandardResolution_ViaOverride_MatchesCDRSM03()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.NONE,
+                GeoMagSharp.GeomagneticModelCategory.StandardResolution);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.StandardResolution, result.ModelCategory);
+            Assert.AreEqual(0.36, result.Declination, 0.001);
+            Assert.AreEqual(5000, result.BhDependentDec, 0.1);
+            Assert.AreEqual(130, result.TotalField, 0.1);
+            Assert.AreEqual(0.20, result.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_IFR1_ViaOverride_MatchesCDRSM03()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.NONE,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference1);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0.15, result.Declination, 0.001);
+            Assert.AreEqual(1500, result.BhDependentDec, 0.1);
+            Assert.AreEqual(50, result.TotalField, 0.1);
+            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_IFR2_ViaOverride_MatchesCDRSM03()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.NONE,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference2);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.InFieldReference2, result.ModelCategory);
+            Assert.AreEqual(0.15, result.Declination, 0.001);
+            Assert.AreEqual(1500, result.BhDependentDec, 0.1);
+            Assert.AreEqual(50, result.TotalField, 0.1);
+            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_UnknownNoOverride_ReturnsNull()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.NONE, null);
+
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_AllFiveCategories_HaveData()
+        {
+            var categories = new[]
+            {
+                GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                GeoMagSharp.GeomagneticModelCategory.StandardResolution,
+                GeoMagSharp.GeomagneticModelCategory.HighResolution,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference1,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference2
+            };
+
+            foreach (var cat in categories)
+            {
+                var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                    GeoMagSharp.knownModels.NONE, cat);
+                Assert.IsNotNull(result, $"Category {cat} returned null");
+                Assert.IsTrue(result.Declination > 0, $"Category {cat} has zero Declination");
+            }
+        }
+
+        #endregion
     }
 }
