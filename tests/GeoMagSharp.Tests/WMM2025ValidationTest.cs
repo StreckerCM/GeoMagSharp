@@ -105,5 +105,53 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(expectedI, result.Inclination.Value, AngleTolerance, $"I (Inclination) at {label}");
             Assert.AreEqual(expectedD, result.Declination.Value, AngleTolerance, $"D (Declination) at {label}");
         }
+
+        //                              date     height  lat    lon     Xdot   Ydot    Zdot   Hdot   Fdot    Idot   Ddot
+        [DataRow(2025.0, 0,   80,  0,   -8.3,   59.5,   31.1,  -7.0,  30.1,   0.01,  0.52,  DisplayName = "SV 2025.0 0km 80N 0E")]
+        [DataRow(2025.0, 0,   0,   120, 9.5,    -23.1,  79.4,  9.6,   -11.2,  0.11,  -0.03, DisplayName = "SV 2025.0 0km 0N 120E")]
+        [DataRow(2025.0, 0,   -80, 240, 33.3,   -8.6,   95.5,  4.0,   -89.6,  0.03,  -0.12, DisplayName = "SV 2025.0 0km 80S 240E")]
+        [DataRow(2025.0, 100, 80,  0,   -7.7,   56.5,   28.7,  -6.9,  27.6,   0.01,  0.52,  DisplayName = "SV 2025.0 100km 80N 0E")]
+        [DataRow(2025.0, 100, 0,   120, 9.2,    -21.0,  72.9,  9.2,   -10.0,  0.11,  -0.03, DisplayName = "SV 2025.0 100km 0N 120E")]
+        [DataRow(2025.0, 100, -80, 240, 30.6,   -8.0,   89.2,  3.9,   -83.8,  0.03,  -0.11, DisplayName = "SV 2025.0 100km 80S 240E")]
+        [DataRow(2027.5, 0,   80,  0,   -8.3,   59.5,   31.1,  -5.6,  30.3,   0.01,  0.53,  DisplayName = "SV 2027.5 0km 80N 0E")]
+        [DataRow(2027.5, 0,   0,   120, 9.5,    -23.1,  79.4,  9.6,   -10.7,  0.11,  -0.03, DisplayName = "SV 2027.5 0km 0N 120E")]
+        [DataRow(2027.5, 0,   -80, 240, 33.3,   -8.6,   95.5,  4.2,   -89.5,  0.04,  -0.12, DisplayName = "SV 2027.5 0km 80S 240E")]
+        [DataRow(2027.5, 100, 80,  0,   -7.7,   56.5,   28.7,  -5.6,  27.8,   0.01,  0.52,  DisplayName = "SV 2027.5 100km 80N 0E")]
+        [DataRow(2027.5, 100, 0,   120, 9.2,    -21.0,  72.9,  9.3,   -9.7,   0.11,  -0.03, DisplayName = "SV 2027.5 100km 0N 120E")]
+        [DataRow(2027.5, 100, -80, 240, 30.6,   -8.0,   89.2,  4.0,   -83.7,  0.03,  -0.11, DisplayName = "SV 2027.5 100km 80S 240E")]
+        [TestMethod]
+        public void SecularVariation_MatchesNOAATestValues(
+            double decimalDate, double heightKm, double lat, double lon,
+            double expectedXdot, double expectedYdot, double expectedZdot,
+            double expectedHdot, double expectedFdot, double expectedIdot, double expectedDdot)
+        {
+            // Arrange
+            var dateOfCalc = decimalDate.ToDateTime();
+            var calcOptions = new CalculationOptions
+            {
+                Latitude = lat,
+                Longitude = lon,
+                StartDate = dateOfCalc,
+                SecularVariation = true
+            };
+            calcOptions.SetElevation(heightKm, Distance.Unit.kilometer, true);
+
+            var internalSH = new Coefficients();
+            var externalSH = new Coefficients();
+            _wmm2025.GetIntExt(decimalDate, out internalSH, out externalSH);
+
+            // Act
+            var result = Calculator.SpotCalculation(calcOptions, dateOfCalc, _wmm2025, internalSH, externalSH);
+
+            // Assert
+            var label = $"({lat}, {lon}) h={heightKm}km date={decimalDate}";
+            Assert.AreEqual(expectedXdot, result.NorthComp.ChangePerYear, IntensityTolerance, $"Xdot at {label}");
+            Assert.AreEqual(expectedYdot, result.EastComp.ChangePerYear, IntensityTolerance, $"Ydot at {label}");
+            Assert.AreEqual(expectedZdot, result.VerticalComp.ChangePerYear, IntensityTolerance, $"Zdot at {label}");
+            Assert.AreEqual(expectedHdot, result.HorizontalIntensity.ChangePerYear, IntensityTolerance, $"Hdot at {label}");
+            Assert.AreEqual(expectedFdot, result.TotalField.ChangePerYear, IntensityTolerance, $"Fdot at {label}");
+            Assert.AreEqual(expectedIdot, result.Inclination.ChangePerYear, AngleTolerance, $"Idot at {label}");
+            Assert.AreEqual(expectedDdot, result.Declination.ChangePerYear, AngleTolerance, $"Ddot at {label}");
+        }
     }
 }
