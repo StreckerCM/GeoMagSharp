@@ -3,14 +3,14 @@ Issue: #4
 Branch: feature/4-wmm2025-validation-tests
 
 ## Tasks
-- [ ] Create WMM2025ValidationTest.cs with model loading helper
-- [ ] Add 12 main field parameterized test cases
-- [ ] Add 12 secular variation parameterized test cases
-- [ ] Verify all tests pass within tolerance
-- [ ] Investigate and document any tolerance exceedances
+- [x] Create WMM2025ValidationTest.cs with model loading helper
+- [x] Add 12 main field parameterized test cases
+- [x] Add 12 secular variation parameterized test cases
+- [x] Verify all tests pass within tolerance
+- [x] Investigate and document any tolerance exceedances — none found, all 24 cases pass within 1.0 nT / 0.01 deg
 
 ## Completion Criteria
-- [ ] All tasks checked
-- [ ] Build succeeds
-- [ ] Tests pass
+- [x] All tasks checked
+- [x] Build succeeds
+- [x] Tests pass (105 passed, 2 skipped pre-existing, 0 failed)
 - [ ] 2 clean Ralph Loop cycles
