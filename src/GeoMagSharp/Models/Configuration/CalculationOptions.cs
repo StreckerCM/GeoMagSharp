@@ -29,6 +29,7 @@ namespace GeoMagSharp
             StepInterval = 0;
             SecularVariation = true;
             CalculationMethod = Algorithm.BGS;
+            ModelCategoryOverride = null;
 
             ElevationValue = 0;
             ElevationUnit = Distance.Unit.meter;
@@ -48,6 +49,7 @@ namespace GeoMagSharp
             StepInterval = other.StepInterval;
             SecularVariation = other.SecularVariation;
             CalculationMethod = other.CalculationMethod;
+            ModelCategoryOverride = other.ModelCategoryOverride;
 
             ElevationValue = other.ElevationValue;
             ElevationUnit = other.ElevationUnit;
@@ -76,6 +78,13 @@ namespace GeoMagSharp
 
         /// <summary>The calculation algorithm to use.</summary>
         public Algorithm CalculationMethod { get; set; }
+
+        /// <summary>
+        /// Optional override for the geomagnetic model category used in uncertainty estimation.
+        /// When null, the category is auto-detected from the loaded model type.
+        /// Set this for commercial models (BGGM, HDGM) or IFR corrections.
+        /// </summary>
+        public GeomagneticModelCategory? ModelCategoryOverride { get; set; }
 
         #region Getters & Setters
 

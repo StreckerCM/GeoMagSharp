@@ -246,5 +246,32 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region CalculationOptions Tests
+
+        [TestMethod]
+        public void CalculationOptions_CopyConstructor_CopiesModelCategoryOverride()
+        {
+            // Arrange
+            var original = new GeoMagSharp.CalculationOptions
+            {
+                ModelCategoryOverride = GeoMagSharp.GeomagneticModelCategory.InFieldReference1
+            };
+
+            // Act
+            var copy = new GeoMagSharp.CalculationOptions(original);
+
+            // Assert
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.InFieldReference1, copy.ModelCategoryOverride);
+        }
+
+        [TestMethod]
+        public void CalculationOptions_ModelCategoryOverride_DefaultsToNull()
+        {
+            var options = new GeoMagSharp.CalculationOptions();
+            Assert.IsNull(options.ModelCategoryOverride);
+        }
+
+        #endregion
     }
 }
