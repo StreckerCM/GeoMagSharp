@@ -5,6 +5,7 @@
  * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
 
+using GeoMagSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GeoMagSharp_UnitTests
@@ -312,6 +313,36 @@ namespace GeoMagSharp_UnitTests
 
             // Assert
             Assert.IsNull(copy.Uncertainty);
+        }
+
+        #endregion
+
+        #region WMMHR Detection Tests
+
+        [TestMethod]
+        public void CheckStringForModel_WMMHR_DetectedAsWMMHR_NotWMM()
+        {
+            // This tests the substring collision: "WMMHR" contains "WMM"
+            string header = "WMMHR2025  2025.0  12/17/2024";
+            var result = header.CheckStringForModel();
+            Assert.AreEqual(GeoMagSharp.knownModels.WMMHR, result);
+        }
+
+        [TestMethod]
+        public void CheckStringForModel_WMM_StillDetectedCorrectly()
+        {
+            string header = "WMM2025  2025.0  12/17/2024";
+            var result = header.CheckStringForModel();
+            Assert.AreEqual(GeoMagSharp.knownModels.WMM, result);
+        }
+
+        [TestMethod]
+        public void CheckStringForModel_WMMHR_NewFormat_Detected()
+        {
+            // New format: year comes first
+            string header = "    2025.0            WMMHR-2025        12/17/2024";
+            var result = header.CheckStringForModel();
+            Assert.AreEqual(GeoMagSharp.knownModels.WMMHR, result);
         }
 
         #endregion
