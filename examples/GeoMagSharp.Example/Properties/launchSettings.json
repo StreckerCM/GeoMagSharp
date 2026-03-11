@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GeoMagSharp.Example": {
+      "commandName": "Project",
+      "workingDirectory": "..\\.."
+    }
+  }
+}
