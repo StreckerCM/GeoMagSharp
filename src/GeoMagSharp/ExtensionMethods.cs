@@ -238,12 +238,19 @@ namespace GeoMagSharp
 
             string trimmed = value.TrimStart();
 
-            // Check for each known model type
-            foreach (knownModels model in Enum.GetValues(typeof(knownModels)))
+            // Check models in order: longer names first to avoid substring collisions
+            // (e.g., "WMMHR" contains "WMM", so WMMHR must be checked before WMM)
+            knownModels[] checkOrder = new knownModels[]
             {
-                if (model.Equals(knownModels.NONE))
-                    continue;
+                knownModels.WMMHR,  // Must be before WMM (substring collision)
+                knownModels.DGRF,
+                knownModels.EMM,
+                knownModels.IGRF,
+                knownModels.WMM
+            };
 
+            foreach (knownModels model in checkOrder)
+            {
                 string modelName = model.ToString();
                 Int32 idx = trimmed.IndexOf(modelName, StringComparison.OrdinalIgnoreCase);
 
