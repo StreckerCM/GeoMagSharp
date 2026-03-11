@@ -511,7 +511,7 @@ namespace GeoMagSharp
                     TotalField = magCalc.Uncertainty.TotalField,
                     DipAngle = magCalc.Uncertainty.DipAngle,
                     Revision = magCalc.Uncertainty.Revision,
-                    DepthAzimuthUncertainty = 0.38
+                    DepthAzimuthUncertainty = DepthCorrection.DepthAzimuthUncertaintyDeg
                 };
             }
         }

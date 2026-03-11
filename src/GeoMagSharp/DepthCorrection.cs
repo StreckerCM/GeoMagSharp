@@ -25,6 +25,12 @@ namespace GeoMagSharp
         private const double RadToDeg = 180.0 / Math.PI;
 
         /// <summary>
+        /// Depth-dependent azimuth uncertainty (degrees, 1-sigma) from SPE-128217-MS Monte Carlo analysis.
+        /// Global average σ_ΔA ≈ 0.38° for depths up to 4 km.
+        /// </summary>
+        public const double DepthAzimuthUncertaintyDeg = 0.38;
+
+        /// <summary>
         /// Calculate depth correction from surface field values using dipole approximation.
         /// </summary>
         /// <param name="horizontalIntensityNT">Surface horizontal intensity B_h (nT)</param>

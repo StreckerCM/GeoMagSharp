@@ -480,7 +480,7 @@ namespace GeoMagSharp_UnitTests
 
             var result = geoMag.ResultsOfCalculation[0];
             Assert.IsNotNull(result.Uncertainty);
-            Assert.AreEqual(0.38, result.Uncertainty.DepthAzimuthUncertainty.Value, 0.001);
+            Assert.AreEqual(DepthCorrection.DepthAzimuthUncertaintyDeg, result.Uncertainty.DepthAzimuthUncertainty.Value, 0.001);
         }
 
         [TestMethod]
