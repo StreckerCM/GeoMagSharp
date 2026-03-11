@@ -16,5 +16,5 @@ Branch: feature/3-depth-adjusted-field
 ## Completion Criteria
 - [x] All tasks checked
 - [x] Build succeeds
-- [x] Tests pass (34 depth correction tests: 27 unit + 7 integration)
+- [x] Tests pass (42 depth correction tests: 35 unit + 7 integration)
 - [ ] 2 clean Ralph Loop cycles
