@@ -276,5 +276,35 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region CalculationOptions Properties
+
+        [TestMethod]
+        public void CalculationOptions_DepthProperties_DefaultToNull()
+        {
+            var options = new CalculationOptions();
+            Assert.IsNull(options.SurveyDepthMeters);
+            Assert.IsNull(options.WellboreAzimuthDeg);
+            Assert.IsNull(options.WellboreInclinationDeg);
+        }
+
+        [TestMethod]
+        public void CalculationOptions_CopyConstructor_CopiesDepthProperties()
+        {
+            var original = new CalculationOptions
+            {
+                SurveyDepthMeters = 3000.0,
+                WellboreAzimuthDeg = 45.0,
+                WellboreInclinationDeg = 60.0
+            };
+
+            var copy = new CalculationOptions(original);
+
+            Assert.AreEqual(3000.0, copy.SurveyDepthMeters);
+            Assert.AreEqual(45.0, copy.WellboreAzimuthDeg);
+            Assert.AreEqual(60.0, copy.WellboreInclinationDeg);
+        }
+
+        #endregion
     }
 }
