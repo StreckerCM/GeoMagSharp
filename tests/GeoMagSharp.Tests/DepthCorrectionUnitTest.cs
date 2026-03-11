@@ -6,6 +6,8 @@
  ****************************************************************************/
 
 using System;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GeoMagSharp;
 
@@ -352,6 +354,211 @@ namespace GeoMagSharp_UnitTests
             var unc = new GeomagneticUncertainty { DepthAzimuthUncertainty = null };
             var scaled = unc.ScaleTo(2.0);
             Assert.IsNull(scaled.DepthAzimuthUncertainty);
+        }
+
+        #endregion
+
+        #region Integration Tests (Pipeline)
+
+        private static string FindWMM2025Path()
+        {
+            var possiblePaths = new[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "TestData"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "tests", "GeoMagSharp.Tests", "TestData"),
+                @"C:\GitHub\GeoMagSharp\tests\GeoMagSharp.Tests\TestData"
+            };
+
+            foreach (var path in possiblePaths)
+            {
+                var candidate = Path.GetFullPath(Path.Combine(path, "WMM2025.COF"));
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+            return null;
+        }
+
+        [TestMethod]
+        public void Integration_WithDepth_HasDepthCorrection()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1),
+                SurveyDepthMeters = 3000.0
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.DepthCorrection);
+            Assert.AreEqual(3000.0, result.DepthCorrection.DepthMeters);
+            Assert.IsTrue(result.DepthCorrection.DipoleScalingFactor > 1.0);
+            Assert.AreEqual("SPE-128217-MS", result.DepthCorrection.Reference);
+        }
+
+        [TestMethod]
+        public void Integration_WithoutDepth_NoDepthCorrection()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1)
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNull(result.DepthCorrection);
+        }
+
+        [TestMethod]
+        public void Integration_WithDepthAndWellbore_HasToolFrameErrors()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1),
+                SurveyDepthMeters = 3000.0,
+                WellboreAzimuthDeg = 45.0,
+                WellboreInclinationDeg = 60.0
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.DepthCorrection);
+            Assert.IsNotNull(result.DepthCorrection.HighSideError);
+            Assert.IsNotNull(result.DepthCorrection.AzimuthErrorDeg);
+            Assert.IsNotNull(result.DepthCorrection.SingularityFactor);
+        }
+
+        [TestMethod]
+        public void Integration_WithDepth_SetsDepthAzimuthUncertainty()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1),
+                SurveyDepthMeters = 3000.0
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.Uncertainty);
+            Assert.AreEqual(0.38, result.Uncertainty.DepthAzimuthUncertainty.Value, 0.001);
+        }
+
+        [TestMethod]
+        public void Integration_WithoutDepth_NoDepthAzimuthUncertainty()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1)
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.Uncertainty);
+            Assert.IsNull(result.Uncertainty.DepthAzimuthUncertainty);
+        }
+
+        [TestMethod]
+        public void Integration_DateRange_AllResultsHaveDepthCorrection()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1),
+                EndDate = new DateTime(2025, 3, 1),
+                StepInterval = 30,
+                SurveyDepthMeters = 2000.0
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            Assert.IsTrue(geoMag.ResultsOfCalculation.Count > 1);
+            Assert.IsTrue(geoMag.ResultsOfCalculation.All(r => r.DepthCorrection != null));
+            Assert.IsTrue(geoMag.ResultsOfCalculation.All(r =>
+                r.DepthCorrection.DepthMeters == 2000.0));
+        }
+
+        [TestMethod]
+        public void Integration_FieldAtDepth_GreaterThanSurface()
+        {
+            var filePath = FindWMM2025Path();
+            if (filePath == null) Assert.Inconclusive("WMM2025.COF not found");
+
+            var geoMag = new GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new DateTime(2025, 1, 1),
+                SurveyDepthMeters = 3000.0
+            };
+            options.SetElevation(0, Distance.Unit.meter);
+
+            geoMag.MagneticCalculations(options);
+
+            var result = geoMag.ResultsOfCalculation[0];
+            // Field at depth should be stronger than surface field
+            Assert.IsTrue(result.DepthCorrection.TotalFieldAtDepth > result.TotalField.Value);
+            Assert.IsTrue(result.DepthCorrection.HorizontalIntensityAtDepth > result.HorizontalIntensity.Value);
         }
 
         #endregion
