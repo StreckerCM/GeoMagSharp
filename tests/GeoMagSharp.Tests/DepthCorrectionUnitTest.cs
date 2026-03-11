@@ -306,5 +306,54 @@ namespace GeoMagSharp_UnitTests
         }
 
         #endregion
+
+        #region MagneticCalculations.DepthCorrection
+
+        [TestMethod]
+        public void MagneticCalculations_DepthCorrection_DefaultsToNull()
+        {
+            var calc = new MagneticCalculations();
+            Assert.IsNull(calc.DepthCorrection);
+        }
+
+        [TestMethod]
+        public void MagneticCalculations_CopyConstructor_CopiesDepthCorrection()
+        {
+            var depthResult = DepthCorrection.Calculate(Bh, Bv, F, DepthM);
+            var original = new MagneticCalculations { DepthCorrection = depthResult };
+            var copy = new MagneticCalculations(original);
+
+            Assert.IsNotNull(copy.DepthCorrection);
+            Assert.AreEqual(original.DepthCorrection.DipoleScalingFactor, copy.DepthCorrection.DipoleScalingFactor);
+        }
+
+        #endregion
+
+        #region GeomagneticUncertainty.DepthAzimuthUncertainty
+
+        [TestMethod]
+        public void GeomagneticUncertainty_DepthAzimuthUncertainty_DefaultsToNull()
+        {
+            var unc = new GeomagneticUncertainty();
+            Assert.IsNull(unc.DepthAzimuthUncertainty);
+        }
+
+        [TestMethod]
+        public void GeomagneticUncertainty_ScaleTo_ScalesDepthAzimuthUncertainty()
+        {
+            var unc = new GeomagneticUncertainty { DepthAzimuthUncertainty = 0.38 };
+            var scaled = unc.ScaleTo(2.0);
+            Assert.AreEqual(0.76, scaled.DepthAzimuthUncertainty.Value, 1e-10);
+        }
+
+        [TestMethod]
+        public void GeomagneticUncertainty_ScaleTo_NullDepthAzimuth_StaysNull()
+        {
+            var unc = new GeomagneticUncertainty { DepthAzimuthUncertainty = null };
+            var scaled = unc.ScaleTo(2.0);
+            Assert.IsNull(scaled.DepthAzimuthUncertainty);
+        }
+
+        #endregion
     }
 }

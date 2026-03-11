@@ -38,6 +38,13 @@ namespace GeoMagSharp
         public string Revision { get; set; }
 
         /// <summary>
+        /// Depth-dependent azimuth uncertainty in degrees, 1-sigma.
+        /// From SPE-128217-MS Monte Carlo analysis: σ_ΔA ≈ 0.38° global average.
+        /// Null if depth correction was not applied.
+        /// </summary>
+        public double? DepthAzimuthUncertainty { get; set; }
+
+        /// <summary>
         /// Returns a new instance with all uncertainty values multiplied by the given scale factor.
         /// Note: This is a linear approximation. Geomagnetic errors follow a Laplacian
         /// (non-Gaussian) distribution, so scaled values are approximate at levels other than 1-sigma.
@@ -52,7 +59,10 @@ namespace GeoMagSharp
                 BhDependentDec = BhDependentDec * scaleFactor,
                 TotalField = TotalField * scaleFactor,
                 DipAngle = DipAngle * scaleFactor,
-                Revision = Revision
+                Revision = Revision,
+                DepthAzimuthUncertainty = DepthAzimuthUncertainty.HasValue
+                    ? DepthAzimuthUncertainty.Value * scaleFactor
+                    : (double?)null
             };
         }
     }
