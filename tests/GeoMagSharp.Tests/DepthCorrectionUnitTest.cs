@@ -243,6 +243,83 @@ namespace GeoMagSharp_UnitTests
 
         #endregion
 
+        #region Additional Edge Cases
+
+        [TestMethod]
+        public void Calculate_SouthernHemisphere_NegativeGeomagneticLatitude()
+        {
+            // Negative B_v means southern hemisphere → negative geomagnetic latitude
+            var result = DepthCorrection.Calculate(20000, -40000, 44721.36, DepthM);
+            Assert.IsTrue(result.GeomagneticLatitudeDeg < 0);
+            Assert.AreEqual(-45.0, result.GeomagneticLatitudeDeg, 0.01);
+        }
+
+        [TestMethod]
+        public void Calculate_Equator_ZeroGeomagneticLatitude()
+        {
+            // At magnetic equator, B_v ≈ 0 → φ ≈ 0°
+            var result = DepthCorrection.Calculate(30000, 0.0, 30000, DepthM);
+            Assert.AreEqual(0.0, result.GeomagneticLatitudeDeg, 0.1);
+        }
+
+        [TestMethod]
+        public void Calculate_PartialWellboreGeometry_SkipsToolFrame()
+        {
+            // Only azimuth provided (no inclination) → should skip Eq 5-8
+            var result = DepthCorrection.Calculate(Bh, Bv, F, DepthM,
+                wellboreAzimuthDeg: 45.0, wellboreInclinationDeg: null);
+            Assert.IsNull(result.HighSideError);
+            Assert.IsNull(result.AzimuthErrorDeg);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void Calculate_NegativeInclination_ThrowsException()
+        {
+            DepthCorrection.Calculate(Bh, Bv, F, DepthM,
+                wellboreAzimuthDeg: 45, wellboreInclinationDeg: -1);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Calculate_NullMagneticCalculations_ThrowsException()
+        {
+            DepthCorrection.Calculate((MagneticCalculations)null, DepthM);
+        }
+
+        [TestMethod]
+        public void Calculate_AzimuthWrapping_370DegEquivalentTo10Deg()
+        {
+            var at370 = DepthCorrection.Calculate(Bh, Bv, F, DepthM,
+                wellboreAzimuthDeg: 370, wellboreInclinationDeg: 60);
+            var at10 = DepthCorrection.Calculate(Bh, Bv, F, DepthM,
+                wellboreAzimuthDeg: 10, wellboreInclinationDeg: 60);
+
+            Assert.AreEqual(at10.AzimuthErrorDeg.Value, at370.AzimuthErrorDeg.Value, 1e-10);
+            Assert.AreEqual(at10.HighSideError.Value, at370.HighSideError.Value, 1e-10);
+        }
+
+        [TestMethod]
+        public void Calculate_DeeperDepth_LargerScalingFactor()
+        {
+            var at1km = DepthCorrection.Calculate(Bh, Bv, F, 1000);
+            var at3km = DepthCorrection.Calculate(Bh, Bv, F, 3000);
+            Assert.IsTrue(at3km.DipoleScalingFactor > at1km.DipoleScalingFactor);
+        }
+
+        [TestMethod]
+        public void Calculate_HorizontalWell_180DegInclination()
+        {
+            // I=180° is valid (past-horizontal, drilling upward)
+            var result = DepthCorrection.Calculate(Bh, Bv, F, DepthM,
+                wellboreAzimuthDeg: 45, wellboreInclinationDeg: 180);
+            Assert.IsNotNull(result.AzimuthErrorDeg);
+            // sin(180)=0, cos(180)=-1 → singularity factor = 1 - 0 = 1
+            Assert.AreEqual(1.0, result.SingularityFactor.Value, 0.001);
+        }
+
+        #endregion
+
         #region Convenience Overload
 
         [TestMethod]
