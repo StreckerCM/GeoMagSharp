@@ -72,6 +72,42 @@ await geoMag.SaveResultsAsync("output.txt", false, cts.Token);
 
 Bundled coefficient files are in the `coefficient/` directory. See `coefficient/NOTICE.md` for attribution and download links for non-bundled models.
 
+### Uncertainty Estimation
+
+GeoMagSharp includes ISCWSA-based geomagnetic uncertainty values (CDR-SM-03 Rev 8, Rev5.13).
+Uncertainty is automatically attached to calculation results based on the loaded model type.
+
+```csharp
+// Uncertainty is auto-populated on each result
+geoMag.MagneticCalculations(options);
+var result = geoMag.ResultsOfCalculation[0];
+
+if (result.Uncertainty != null)
+{
+    Console.WriteLine($"Category:    {result.Uncertainty.ModelCategory}");
+    Console.WriteLine($"Declination: +/-{result.Uncertainty.Declination:F2} deg (1-sigma)");
+    Console.WriteLine($"Total Field: +/-{result.Uncertainty.TotalField:F0} nT (1-sigma)");
+    Console.WriteLine($"Dip Angle:   +/-{result.Uncertainty.DipAngle:F2} deg (1-sigma)");
+
+    // Scale to approximate 2-sigma
+    var u2 = result.Uncertainty.ScaleTo(2.0);
+}
+
+// Override for commercial models or in-field referencing
+var ifrOptions = new CalculationOptions
+{
+    Latitude = 40.0,
+    Longitude = -105.0,
+    StartDate = new DateTime(2025, 7, 1),
+    ModelCategoryOverride = GeomagneticModelCategory.InFieldReference1
+};
+```
+
+Auto-detected categories: WMM/IGRF/DGRF → LowResolution, WMMHR/EMM → HighResolution.
+For BGGM, HDGM, or IFR corrections, set `ModelCategoryOverride` on `CalculationOptions`.
+
+See [`examples/GeoMagSharp.Example`](examples/GeoMagSharp.Example) for a runnable smoke test.
+
 ## Target Frameworks
 
 - .NET Framework 4.8

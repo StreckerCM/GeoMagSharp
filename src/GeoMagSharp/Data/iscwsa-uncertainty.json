@@ -1,0 +1,37 @@
+{
+  "revision": "Rev5.13",
+  "date": "2023-01",
+  "source": "CDR-SM-03 Rev 8 (Copsegrove, 2013) + ISCWSA Error Model Rev5.13",
+  "categories": {
+    "LowResolution": {
+      "declination": 0.36,
+      "bhDependentDec": 5000,
+      "totalField": 157,
+      "dipAngle": 0.24
+    },
+    "StandardResolution": {
+      "declination": 0.36,
+      "bhDependentDec": 5000,
+      "totalField": 130,
+      "dipAngle": 0.20
+    },
+    "HighResolution": {
+      "declination": 0.30,
+      "bhDependentDec": 4118,
+      "totalField": 107,
+      "dipAngle": 0.16
+    },
+    "InFieldReference1": {
+      "declination": 0.15,
+      "bhDependentDec": 1500,
+      "totalField": 50,
+      "dipAngle": 0.10
+    },
+    "InFieldReference2": {
+      "declination": 0.15,
+      "bhDependentDec": 1500,
+      "totalField": 50,
+      "dipAngle": 0.10
+    }
+  }
+}

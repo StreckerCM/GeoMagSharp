@@ -219,7 +219,7 @@ namespace GeoMagSharp_UnitTests
         #region WMMHR (High Resolution) Tests
 
         [TestMethod]
-        public void Read_WMMHR_DetectsWMMModelType()
+        public void Read_WMMHR_DetectsWMMHRModelType()
         {
             // Arrange
             string filePath = Path.Combine(TestDataPath, "WMMHR.COF");
@@ -231,7 +231,7 @@ namespace GeoMagSharp_UnitTests
 
             // Assert
             Assert.IsNotNull(modelSet);
-            Assert.AreEqual(knownModels.WMM, modelSet.Type, "Model type should be WMM (WMMHR is a WMM variant)");
+            Assert.AreEqual(knownModels.WMMHR, modelSet.Type, "Model type should be WMMHR");
         }
 
         [TestMethod]
@@ -604,7 +604,7 @@ namespace GeoMagSharp_UnitTests
         }
 
         [TestMethod]
-        public void CheckStringForModel_WMMHR_DetectsWMM()
+        public void CheckStringForModel_WMMHR_DetectsWMMHR()
         {
             // Arrange - WMMHR header
             string header = "    2025.0           WMMHR-2025       11/13/2024";
@@ -613,7 +613,7 @@ namespace GeoMagSharp_UnitTests
             var result = header.CheckStringForModel();
 
             // Assert
-            Assert.AreEqual(knownModels.WMM, result, "WMMHR should be detected as WMM variant");
+            Assert.AreEqual(knownModels.WMMHR, result, "WMMHR should be detected as its own model type");
         }
 
         [TestMethod]

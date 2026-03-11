@@ -30,14 +30,14 @@ Iteration 5, 11, 17, 23... → [5] PROJECT_MANAGER
 
 ### Standard 6-Persona Rotation
 
-| Slot | Persona | Focus |
-|:----:|---------|-------|
-| [0] | #5 IMPLEMENTER | Complete tasks, write code |
-| [1] | #9 REVIEWER | Review for bugs, code quality |
-| [2] | #7 TESTER | Verify functionality, add tests |
-| [3] | #3 API_DESIGNER | Review public API, NuGet surface |
-| [4] | #10 SECURITY_AUDITOR | Security review, input validation |
-| [5] | #2 PROJECT_MANAGER | Check requirements, update tasks |
+| Slot | Persona | Model | Focus |
+|:----:|---------|:-----:|-------|
+| [0] | #5 IMPLEMENTER | Sonnet | Complete tasks, write code |
+| [1] | #9 REVIEWER | Opus | Review for bugs, code quality |
+| [2] | #7 TESTER | Sonnet | Verify functionality, add tests |
+| [3] | #3 API_DESIGNER | Sonnet | Review public API, NuGet surface |
+| [4] | #10 SECURITY_AUDITOR | Opus | Security review, input validation |
+| [5] | #2 PROJECT_MANAGER | Haiku | Check requirements, update tasks |
 
 ### Quick Start Command
 
@@ -52,12 +52,12 @@ PHASE 1 - TASKS:
 
 PHASE 2 - ROTATING REVIEW (ITERATION MOD 6):
 
-[0] #5 IMPLEMENTER: Complete next task, follow patterns
-[1] #9 REVIEWER: Review code for bugs/issues, fix problems
-[2] #7 TESTER: Verify functionality, check edge cases
-[3] #3 API_DESIGNER: Review public API, XML docs, compatibility
-[4] #10 SECURITY: Check for vulnerabilities, validate inputs
-[5] #2 PROJECT_MANAGER: Verify requirements met, update tasks
+[0] #5 IMPLEMENTER (model:sonnet): Complete next task, follow patterns
+[1] #9 REVIEWER (model:opus): Review code for bugs/issues, fix problems
+[2] #7 TESTER (model:sonnet): Verify functionality, check edge cases
+[3] #3 API_DESIGNER (model:sonnet): Review public API, XML docs, compatibility
+[4] #10 SECURITY (model:opus): Check for vulnerabilities, validate inputs
+[5] #2 PROJECT_MANAGER (model:haiku): Verify requirements met, update tasks
 
 EACH ITERATION:
 1. Identify current persona (Iteration % 6)

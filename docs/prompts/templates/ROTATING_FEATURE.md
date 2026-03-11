@@ -31,37 +31,37 @@ PHASE 1 - TASK COMPLETION:
 PHASE 2 - ROTATING PERSONA REVIEW (cycle each iteration):
 Current Persona = ITERATION MOD 6:
 
-[0] #5 IMPLEMENTER:
+[0] #5 IMPLEMENTER (model:sonnet):
 - Check tasks.md for incomplete items
 - Implement next unchecked task
 - Follow existing code patterns
 - Run build after changes
 
-[1] #9 CODE REVIEWER:
+[1] #9 CODE REVIEWER (model:opus):
 - Review recent changes for bugs, edge cases
 - Check error handling and null safety
 - Verify code follows project patterns
 - Fix any issues found
 
-[2] #7 TESTER:
+[2] #7 TESTER (model:sonnet):
 - Run: dotnet test -c Release --verbosity normal
 - Check test coverage for new code
 - Write missing unit tests
 - Verify edge cases are covered
 
-[3] #3 API_DESIGNER:
+[3] #3 API_DESIGNER (model:sonnet):
 - Review public API surface changes
 - Check XML documentation on public members
 - Verify multi-target compatibility (net48 + netstandard2.0)
 - Ensure backward compatibility
 
-[4] #10 SECURITY_AUDITOR:
+[4] #10 SECURITY_AUDITOR (model:opus):
 - Check for hardcoded values that should be config
 - Verify input validation for coordinates
 - Look for potential security issues
 - Review any new file I/O code
 
-[5] #2 PROJECT_MANAGER:
+[5] #2 PROJECT_MANAGER (model:haiku):
 - Verify all tasks in tasks.md are checked
 - Check requirements are met
 - Document any gaps or issues found
@@ -94,10 +94,10 @@ Feature: [FEATURE_NUMBER]-[feature-name]
 
 ROTATING PERSONA (ITERATION MOD 4):
 
-[0] #5 IMPLEMENTER: Complete next task from tasks.md, run build
-[1] #9 REVIEWER: Review code for bugs/issues, fix problems
-[2] #7 TESTER: Verify functionality, add tests if needed
-[3] #2 PROJECT_MANAGER: Check all requirements met, update tasks.md
+[0] #5 IMPLEMENTER (model:sonnet): Complete next task from tasks.md, run build
+[1] #9 REVIEWER (model:opus): Review code for bugs/issues, fix problems
+[2] #7 TESTER (model:sonnet): Verify functionality, add tests if needed
+[3] #2 PROJECT_MANAGER (model:haiku): Check all requirements met, update tasks.md
 
 EACH ITERATION:
 1. Run current persona's checks
@@ -121,17 +121,17 @@ Feature: [FEATURE_NUMBER]-[feature-name]
 
 ROTATING PERSONA (ITERATION MOD 11):
 
-[0] #1 BUSINESS_ANALYST: Verify requirements clarity, check acceptance criteria
-[1] #2 PROJECT_MANAGER: Check progress, identify blockers, update tasks
-[2] #3 API_DESIGNER: Review public API design, XML docs, compatibility
-[3] #4 COMPATIBILITY_REVIEWER: Check multi-target build, cross-framework APIs
-[4] #5 IMPLEMENTER: Complete next task, follow patterns
-[5] #6 REFACTORER: Clean up code, improve organization
-[6] #7 TESTER: Run tests, add coverage, verify edge cases
-[7] #8 DEBUGGER: Look for potential bugs, add defensive code
-[8] #9 REVIEWER: Full code review, check quality
-[9] #10 SECURITY_AUDITOR: Security review, check for vulnerabilities
-[10] #11 DOCUMENTER: Update comments, check documentation
+[0] #1 BUSINESS_ANALYST (model:haiku): Verify requirements clarity, check acceptance criteria
+[1] #2 PROJECT_MANAGER (model:haiku): Check progress, identify blockers, update tasks
+[2] #3 API_DESIGNER (model:sonnet): Review public API design, XML docs, compatibility
+[3] #4 COMPATIBILITY_REVIEWER (model:sonnet): Check multi-target build, cross-framework APIs
+[4] #5 IMPLEMENTER (model:sonnet): Complete next task, follow patterns
+[5] #6 REFACTORER (model:sonnet): Clean up code, improve organization
+[6] #7 TESTER (model:sonnet): Run tests, add coverage, verify edge cases
+[7] #8 DEBUGGER (model:sonnet): Look for potential bugs, add defensive code
+[8] #9 REVIEWER (model:opus): Full code review, check quality
+[9] #10 SECURITY_AUDITOR (model:opus): Security review, check for vulnerabilities
+[10] #11 DOCUMENTER (model:haiku): Update comments, check documentation
 
 OUTPUT <promise>FEATURE COMPLETE</promise> when all tasks done and clean cycle.
 " --completion-promise "FEATURE COMPLETE" --max-iterations 44

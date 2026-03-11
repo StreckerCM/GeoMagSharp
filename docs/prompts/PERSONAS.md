@@ -21,14 +21,14 @@ Iteration 5, 11, 17, 23... → [5] #2 PROJECT_MANAGER
 
 ### Standard 6-Persona Rotation
 
-| Slot | Persona | Focus |
-|:----:|---------|-------|
-| [0] | #5 IMPLEMENTER | Complete tasks, write code |
-| [1] | #9 REVIEWER | Review for bugs, code quality |
-| [2] | #7 TESTER | Verify functionality, add tests |
-| [3] | #3 API_DESIGNER | Review public API, NuGet surface |
-| [4] | #10 SECURITY_AUDITOR | Security review, input validation |
-| [5] | #2 PROJECT_MANAGER | Check requirements, update tasks |
+| Slot | Persona | Model | Focus |
+|:----:|---------|:-----:|-------|
+| [0] | #5 IMPLEMENTER | Sonnet | Complete tasks, write code |
+| [1] | #9 REVIEWER | Opus | Review for bugs, code quality |
+| [2] | #7 TESTER | Sonnet | Verify functionality, add tests |
+| [3] | #3 API_DESIGNER | Sonnet | Review public API, NuGet surface |
+| [4] | #10 SECURITY_AUDITOR | Opus | Security review, input validation |
+| [5] | #2 PROJECT_MANAGER | Haiku | Check requirements, update tasks |
 
 ### Why Rotation Works
 
@@ -37,23 +37,42 @@ Iteration 5, 11, 17, 23... → [5] #2 PROJECT_MANAGER
 - Ensures comprehensive coverage (code, tests, API, security)
 - Completion requires "2 clean cycles" = all 6 personas find no issues twice
 
+### Model Hints
+
+Each persona has a recommended Claude model based on its role:
+
+| Tier | Model | Personas | Rationale |
+|------|-------|----------|-----------|
+| **Judgment** | Opus | Reviewer, Security Auditor | Mistakes here are expensive — missed bugs, security holes |
+| **Execution** | Sonnet | Implementer, Tester, API Designer, Compatibility Reviewer, Refactorer, Debugger | Bulk token generation — straightforward work guided by patterns |
+| **Coordination** | Haiku | Project Manager, Documenter, Business Analyst | Bookkeeping, prose, status tracking — minimal reasoning needed |
+
+When launching parallel agents via the `Task` tool, pass the `model` parameter to match:
+```
+Task(model: "sonnet", ...) // IMPLEMENTER
+Task(model: "opus",   ...) // REVIEWER
+Task(model: "haiku",  ...) // PROJECT_MANAGER
+```
+
+This typically saves 60-70% on token costs (Implementer + Tester consume the bulk) while keeping Opus-level quality for judgment-critical reviews.
+
 ---
 
 ## All 11 Personas
 
-| # | Persona | Phase | Use For |
-|:-:|---------|-------|---------|
-| 1 | BUSINESS_ANALYST | Requirements | Specs, user stories, acceptance criteria |
-| 2 | PROJECT_MANAGER | Planning | Task breakdown, progress tracking, risks |
-| 3 | API_DESIGNER | Design | Public API surface, usability, documentation |
-| 4 | COMPATIBILITY_REVIEWER | Multi-target | Cross-framework compatibility review |
-| 5 | IMPLEMENTER | Development | Feature implementation |
-| 6 | REFACTORER | Development | Code organization, cleanup |
-| 7 | TESTER | Testing | Unit tests, integration tests |
-| 8 | DEBUGGER | Testing | Bug investigation and fixes |
-| 9 | REVIEWER | Quality | Code review |
-| 10 | SECURITY_AUDITOR | Quality | Security analysis |
-| 11 | DOCUMENTER | Documentation | README, XML docs, guides |
+| # | Persona | Model | Phase | Use For |
+|:-:|---------|:-----:|-------|---------|
+| 1 | BUSINESS_ANALYST | Haiku | Requirements | Specs, user stories, acceptance criteria |
+| 2 | PROJECT_MANAGER | Haiku | Planning | Task breakdown, progress tracking, risks |
+| 3 | API_DESIGNER | Sonnet | Design | Public API surface, usability, documentation |
+| 4 | COMPATIBILITY_REVIEWER | Sonnet | Multi-target | Cross-framework compatibility review |
+| 5 | IMPLEMENTER | Sonnet | Development | Feature implementation |
+| 6 | REFACTORER | Sonnet | Development | Code organization, cleanup |
+| 7 | TESTER | Sonnet | Testing | Unit tests, integration tests |
+| 8 | DEBUGGER | Sonnet | Testing | Bug investigation and fixes |
+| 9 | REVIEWER | Opus | Quality | Code review |
+| 10 | SECURITY_AUDITOR | Opus | Quality | Security analysis |
+| 11 | DOCUMENTER | Haiku | Documentation | README, XML docs, guides |
 
 ---
 
@@ -62,6 +81,7 @@ Iteration 5, 11, 17, 23... → [5] #2 PROJECT_MANAGER
 ### #1 - BUSINESS_ANALYST
 
 **Role:** Requirements and specification specialist
+**Model:** Haiku
 
 **Mindset:**
 - Focus on consumer needs and library usability
@@ -107,6 +127,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #2 - PROJECT_MANAGER
 
 **Role:** Planning and coordination specialist
+**Model:** Haiku
 
 **Mindset:**
 - Break work into manageable tasks
@@ -152,6 +173,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #3 - API_DESIGNER
 
 **Role:** Public API surface and library usability specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Prioritize API consistency and discoverability
@@ -201,6 +223,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #4 - COMPATIBILITY_REVIEWER
 
 **Role:** Multi-target and cross-framework compatibility specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Verify code works on both net48 and netstandard2.0
@@ -220,6 +243,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #5 - IMPLEMENTER
 
 **Role:** Feature implementation specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Follow the task checklist methodically
@@ -250,6 +274,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #6 - REFACTORER
 
 **Role:** Code quality and organization specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Preserve existing behavior exactly
@@ -270,6 +295,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #7 - TESTER
 
 **Role:** Test creation specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Focus on behavior, not implementation details
@@ -302,6 +328,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #8 - DEBUGGER
 
 **Role:** Bug investigation and fix specialist
+**Model:** Sonnet
 
 **Mindset:**
 - Reproduce the issue first
@@ -326,6 +353,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #9 - REVIEWER
 
 **Role:** Code review specialist
+**Model:** Opus
 
 **Mindset:**
 - Look for bugs, security issues, and maintainability problems
@@ -366,6 +394,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #10 - SECURITY_AUDITOR
 
 **Role:** Security review specialist
+**Model:** Opus
 
 **Mindset:**
 - Check for common vulnerabilities
@@ -409,6 +438,7 @@ As a [library consumer], I want [goal] so that [benefit].
 ### #11 - DOCUMENTER
 
 **Role:** Documentation specialist
+**Model:** Haiku
 
 **Mindset:**
 - Write for the reader, not yourself
@@ -474,12 +504,12 @@ The most effective way to use personas is **rotation** - cycling through differe
 ### Standard 6-Persona Rotation
 
 ```
-[0] #5 IMPLEMENTER   - Complete tasks, write code
-[1] #9 REVIEWER      - Review for bugs, issues
-[2] #7 TESTER        - Verify functionality, add tests
-[3] #3 API_DESIGNER  - Review public API surface
-[4] #10 SECURITY     - Security review
-[5] #2 PROJECT_MGR   - Check requirements, update tasks
+[0] #5 IMPLEMENTER (sonnet)   - Complete tasks, write code
+[1] #9 REVIEWER (opus)        - Review for bugs, issues
+[2] #7 TESTER (sonnet)        - Verify functionality, add tests
+[3] #3 API_DESIGNER (sonnet)  - Review public API surface
+[4] #10 SECURITY (opus)       - Security review
+[5] #2 PROJECT_MGR (haiku)    - Check requirements, update tasks
 ```
 
 ### Example Rotating Loop
@@ -495,12 +525,12 @@ PHASE 1 - TASKS:
 
 PHASE 2 - ROTATING REVIEW (ITERATION MOD 6):
 
-[0] #5 IMPLEMENTER: Complete next task, follow patterns
-[1] #9 REVIEWER: Review code for bugs/issues, fix problems
-[2] #7 TESTER: Verify functionality, check edge cases
-[3] #3 API_DESIGNER: Review public API, XML docs, compatibility
-[4] #10 SECURITY: Check for vulnerabilities, validate inputs
-[5] #2 PROJECT_MANAGER: Verify requirements met, update tasks
+[0] #5 IMPLEMENTER (model:sonnet): Complete next task, follow patterns
+[1] #9 REVIEWER (model:opus): Review code for bugs/issues, fix problems
+[2] #7 TESTER (model:sonnet): Verify functionality, check edge cases
+[3] #3 API_DESIGNER (model:sonnet): Review public API, XML docs, compatibility
+[4] #10 SECURITY (model:opus): Check for vulnerabilities, validate inputs
+[5] #2 PROJECT_MANAGER (model:haiku): Verify requirements met, update tasks
 
 EACH ITERATION:
 1. Run current persona's checks (Iteration % 6)
@@ -554,6 +584,7 @@ For simpler tasks, use personas in sequence:
 ### #[N] - [PERSONA_NAME]
 
 **Role:** [one-line description]
+**Model:** [Opus | Sonnet | Haiku]
 
 **Mindset:**
 - [key behavior 1]
