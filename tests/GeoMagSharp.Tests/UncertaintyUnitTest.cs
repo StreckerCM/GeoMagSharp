@@ -61,6 +61,50 @@ namespace GeoMagSharp_UnitTests
         }
 
         [TestMethod]
+        public void GeomagneticUncertainty_ScaleTo_IdentityFactor_ReturnsSameValues()
+        {
+            // Arrange
+            var uncertainty = new GeoMagSharp.GeomagneticUncertainty
+            {
+                Declination = 0.36,
+                BhDependentDec = 5000,
+                TotalField = 157,
+                DipAngle = 0.24
+            };
+
+            // Act
+            var scaled = uncertainty.ScaleTo(1.0);
+
+            // Assert
+            Assert.AreEqual(0.36, scaled.Declination, 0.0001);
+            Assert.AreEqual(5000, scaled.BhDependentDec, 0.0001);
+            Assert.AreEqual(157, scaled.TotalField, 0.0001);
+            Assert.AreEqual(0.24, scaled.DipAngle, 0.0001);
+        }
+
+        [TestMethod]
+        public void GeomagneticUncertainty_ScaleTo_ZeroFactor_ReturnsZeroValues()
+        {
+            // Arrange
+            var uncertainty = new GeoMagSharp.GeomagneticUncertainty
+            {
+                Declination = 0.36,
+                BhDependentDec = 5000,
+                TotalField = 157,
+                DipAngle = 0.24
+            };
+
+            // Act
+            var scaled = uncertainty.ScaleTo(0.0);
+
+            // Assert
+            Assert.AreEqual(0.0, scaled.Declination, 0.0001);
+            Assert.AreEqual(0.0, scaled.BhDependentDec, 0.0001);
+            Assert.AreEqual(0.0, scaled.TotalField, 0.0001);
+            Assert.AreEqual(0.0, scaled.DipAngle, 0.0001);
+        }
+
+        [TestMethod]
         public void GeomagneticUncertainty_ScaleTo_DoesNotMutateOriginal()
         {
             // Arrange
@@ -214,6 +258,39 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(1500, result.BhDependentDec, 0.1);
             Assert.AreEqual(50, result.TotalField, 0.1);
             Assert.AreEqual(0.10, result.DipAngle, 0.001);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_WMMHR_ReturnsHighResolution()
+        {
+            // WMMHR should auto-detect to HighResolution through the full pipeline
+            var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.WMMHR, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.HighResolution, result.ModelCategory);
+            Assert.AreEqual(0.30, result.Declination, 0.001);
+            Assert.AreEqual(4118, result.BhDependentDec, 0.1);
+        }
+
+        [TestMethod]
+        public void GetUncertainty_AllCategories_HaveRevision()
+        {
+            var categories = new[]
+            {
+                GeoMagSharp.GeomagneticModelCategory.LowResolution,
+                GeoMagSharp.GeomagneticModelCategory.StandardResolution,
+                GeoMagSharp.GeomagneticModelCategory.HighResolution,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference1,
+                GeoMagSharp.GeomagneticModelCategory.InFieldReference2
+            };
+
+            foreach (var cat in categories)
+            {
+                var result = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                    GeoMagSharp.knownModels.NONE, cat);
+                Assert.AreEqual("Rev5.13", result.Revision, $"Category {cat} has wrong Revision");
+            }
         }
 
         [TestMethod]
@@ -430,6 +507,39 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.InFieldReference1, result.Uncertainty.ModelCategory);
             Assert.AreEqual(0.15, result.Uncertainty.Declination, 0.001);
             Assert.AreEqual(1500, result.Uncertainty.BhDependentDec, 0.1);
+        }
+
+        [TestMethod]
+        public void Integration_DateRange_AllResultsHaveUncertainty()
+        {
+            // Arrange — date range with 3 steps to verify uncertainty is attached to all results
+            var filePath = FindWMM2025Path();
+            if (filePath == null)
+                Assert.Inconclusive("WMM2025.COF not found in TestData folder");
+
+            var geoMag = new GeoMagSharp.GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new GeoMagSharp.CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new System.DateTime(2025, 1, 1),
+                EndDate = new System.DateTime(2025, 3, 1),
+                StepInterval = 30
+            };
+            options.SetElevation(0, GeoMagSharp.Distance.Unit.meter);
+
+            // Act
+            geoMag.MagneticCalculations(options);
+
+            // Assert — all results should have uncertainty, not just the first
+            Assert.IsTrue(geoMag.ResultsOfCalculation.Count >= 2, "Expected at least 2 results for date range");
+            foreach (var result in geoMag.ResultsOfCalculation)
+            {
+                Assert.IsNotNull(result.Uncertainty, $"Result for {result.Date:yyyy-MM-dd} has null Uncertainty");
+                Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.Uncertainty.ModelCategory);
+            }
         }
 
         #endregion
