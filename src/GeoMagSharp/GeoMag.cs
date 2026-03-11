@@ -130,6 +130,9 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
+            var uncertainty = UncertaintyDataProvider.GetUncertainty(
+                _Models.Type, _CalculationOptions.ModelCategoryOverride);
+
             while (dateIdx <= timespan.Days)
             {
 
@@ -143,7 +146,11 @@ namespace GeoMagSharp
 
                 var magCalcDate = Calculator.SpotCalculation(_CalculationOptions, intervalDate, _Models, internalSH, externalSH, _Models.EarthRadius);
 
-                if (magCalcDate != null) ResultsOfCalculation.Add(magCalcDate);
+                if (magCalcDate != null)
+                {
+                    magCalcDate.Uncertainty = uncertainty;
+                    ResultsOfCalculation.Add(magCalcDate);
+                }
 
                 dateIdx = ((dateIdx < timespan.Days) && ((dateIdx + dayInc) > timespan.Days))
                             ? timespan.Days
@@ -325,6 +332,9 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
+            var uncertainty = UncertaintyDataProvider.GetUncertainty(
+                _Models.Type, _CalculationOptions.ModelCategoryOverride);
+
             while (dateIdx <= timespan.Days)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -351,7 +361,11 @@ namespace GeoMagSharp
                     Calculator.SpotCalculation(calcOptions, intervalDate, models, internalSH, externalSH, models.EarthRadius),
                     cancellationToken).ConfigureAwait(false);
 
-                if (magCalcDate != null) ResultsOfCalculation.Add(magCalcDate);
+                if (magCalcDate != null)
+                {
+                    magCalcDate.Uncertainty = uncertainty;
+                    ResultsOfCalculation.Add(magCalcDate);
+                }
 
                 dateIdx = ((dateIdx < timespan.Days) && ((dateIdx + dayInc) > timespan.Days))
                             ? timespan.Days

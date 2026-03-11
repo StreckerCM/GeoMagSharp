@@ -88,6 +88,51 @@ namespace GeoMagSharp
         /// <summary>
         /// World Magnetic Model
         /// </summary>
-        WMM = 4
+        WMM = 4,
+
+        /// <summary>
+        /// World Magnetic Model High Resolution.
+        /// Not in ISCWSA Rev5.13 (predates it); classified as HighResolution (HRGM)
+        /// based on SH degree (729).
+        /// </summary>
+        WMMHR = 5
+    }
+
+    /// <summary>
+    /// ISCWSA geomagnetic reference model categories for uncertainty estimation.
+    /// Categories are defined by spherical harmonic degree range per ISCWSA Rev5.13.
+    /// </summary>
+    public enum GeomagneticModelCategory
+    {
+        /// <summary>
+        /// Unknown or unrecognized model — uncertainty cannot be auto-determined.
+        /// Use ModelCategoryOverride in CalculationOptions to set manually.
+        /// </summary>
+        Unknown = 0,
+
+        /// <summary>
+        /// Low Resolution Global Model (ISCWSA LRGM, degree ≤13): IGRF, WMM, DGRF
+        /// </summary>
+        LowResolution = 1,
+
+        /// <summary>
+        /// Standard Resolution Global Model (ISCWSA SRGM, degree ≤133): BGGM pre-2019
+        /// </summary>
+        StandardResolution = 2,
+
+        /// <summary>
+        /// High Resolution Global Model (ISCWSA HRGM, degree ≤720): HDGM, BGGM 2019+, EMM, WMMHR
+        /// </summary>
+        HighResolution = 3,
+
+        /// <summary>
+        /// In-Field Referencing level 1
+        /// </summary>
+        InFieldReference1 = 4,
+
+        /// <summary>
+        /// In-Field Referencing level 2 (with multi-station correction)
+        /// </summary>
+        InFieldReference2 = 5
     }
 }
