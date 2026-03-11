@@ -149,6 +149,7 @@ namespace GeoMagSharp
                 if (magCalcDate != null)
                 {
                     magCalcDate.Uncertainty = uncertainty;
+                    ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }
 
@@ -364,6 +365,7 @@ namespace GeoMagSharp
                 if (magCalcDate != null)
                 {
                     magCalcDate.Uncertainty = uncertainty;
+                    ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }
 
@@ -483,6 +485,35 @@ namespace GeoMagSharp
 
                 File.WriteAllText(fileName, content);
             }, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Applies dipole depth correction to a calculation result if SurveyDepthMeters is set.
+        /// </summary>
+        private static void ApplyDepthCorrection(MagneticCalculations magCalc, CalculationOptions options)
+        {
+            if (!options.SurveyDepthMeters.HasValue)
+                return;
+
+            magCalc.DepthCorrection = DepthCorrection.Calculate(
+                magCalc,
+                options.SurveyDepthMeters.Value,
+                options.WellboreAzimuthDeg,
+                options.WellboreInclinationDeg);
+
+            if (magCalc.Uncertainty != null)
+            {
+                magCalc.Uncertainty = new GeomagneticUncertainty
+                {
+                    ModelCategory = magCalc.Uncertainty.ModelCategory,
+                    Declination = magCalc.Uncertainty.Declination,
+                    BhDependentDec = magCalc.Uncertainty.BhDependentDec,
+                    TotalField = magCalc.Uncertainty.TotalField,
+                    DipAngle = magCalc.Uncertainty.DipAngle,
+                    Revision = magCalc.Uncertainty.Revision,
+                    DepthAzimuthUncertainty = 0.38
+                };
+            }
         }
 
     }
