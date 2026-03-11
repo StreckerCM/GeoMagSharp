@@ -17,4 +17,4 @@ Branch: feature/2-uncertainty-estimation
 - [x] All tasks checked
 - [x] Build succeeds
 - [x] Tests pass
-- [ ] 2 clean Ralph Loop cycles
+- [x] 2 clean Ralph Loop cycles
