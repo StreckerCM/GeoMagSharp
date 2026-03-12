@@ -1,6 +1,6 @@
 # Feature: IGRF Cross-Validation Tests
 Issue: #12
-Branch: feature/12-igrf-cross-validation
+Branch: feature/3-depth-adjusted-field
 
 ## Tasks
 - [x] Copy IGRF12.COF and IGRF14.COF to TestData
