@@ -160,7 +160,7 @@ namespace GeoMagSharp_UnitTests
 
         #region Phase 1: IGRF-12 Secular Variation
 
-        //                              date     height  lat    lon     Xdot  Ydot   Zdot  Hdot  Fddot   Idot     Ddot
+        //                              date     height  lat    lon     Xdot  Ydot   Zdot  Hdot  Fdot   Idot     Ddot
         // Epoch 2000.0 (Definitive)
         [DataRow(2000.0, 0,   80,  0,   2.6,    45.2,   32.4,  -5.3,  31.5,  0.00975, 0.38209, DisplayName = "SV IGRF12 2000.0 0km 80N 0E")]
         [DataRow(2000.0, 0,   0,   120, -2.2,   -5.6,   46.9,  -2.3,  -16.1, 0.06124, -0.00813, DisplayName = "SV IGRF12 2000.0 0km 0N 120E")]
