@@ -23,7 +23,7 @@ New file `IgrfCrossValidationTest.cs` following the same pattern as `WMM2025Vali
 
 ### Phase 1: Cross-Validate IGRF-12 Against IGRF-14 Reference Values
 
-**Test points:** 3 locations × 2 altitudes × 4 definitive epochs = 24 main field test cases
+**Test points:** 3 locations × 2 altitudes × 4 epochs = 24 main field + 24 SV test cases
 
 | Location | Latitude | Longitude |
 |----------|----------|-----------|
@@ -51,14 +51,12 @@ New file `IgrfCrossValidationTest.cs` following the same pattern as `WMM2025Vali
 - Epoch 2020.0: IGRF12.COF's last model header is `IGRF2015` covering 2015–2020 via SV. At exactly 2020.0 (the boundary), values come from SV extrapolation only — unreliable for cross-validation, skipped
 - Epoch 2025.0: Outside IGRF-12 range entirely — Phase 2 only
 
-Phase 1 tests 4 epochs (2000.0–2015.0) × 3 locations × 2 altitudes = **24 main field test cases**.
-
-SV tests are deferred until accurate epoch-specific SV reference data is obtained (see SV Data Note below).
+Phase 1 tests 4 epochs (2000.0–2015.0) × 3 locations × 2 altitudes = **24 main field + 24 SV test cases** (48 total).
 
 ### Phase 2: Test with IGRF-14 Coefficient File
 
 - Copy existing `coefficient/IGRF14.COF` to `tests/GeoMagSharp.Tests/TestData/`
-- Test all 6 epochs (2000.0–2025.0) × 3 locations × 2 altitudes = **36 main field test cases**
+- Test all 6 epochs (2000.0–2025.0) × 3 locations × 2 altitudes = **36 main field + 36 SV test cases** (72 total)
 - All epochs use IGRF-14 coefficients matching the reference calculator — tight tolerances for all
 
 ### Test Methods
@@ -69,16 +67,19 @@ SV tests are deferred until accurate epoch-specific SV reference data is obtaine
    - Asserts: D, I, H, X, Y, Z, F
    - 18 rows at tight tolerance (definitive epochs), 6 rows at loose tolerance (2015.0)
 
+2. `SecularVariation_Igrf12_MatchesReferenceValues` — 24 `[DataRow]` entries
+   - Asserts: ChangePerYear for all 7 components
+   - Same tolerance tiers as main field
+
 **Phase 2:**
 
-2. `MainField_Igrf14_MatchesReferenceValues` — 36 `[DataRow]` entries
+3. `MainField_Igrf14_MatchesReferenceValues` — 36 `[DataRow]` entries
    - Asserts: D, I, H, X, Y, Z, F
    - All at tight tolerance
 
-**Deferred (pending SV data):**
-
-3. `SecularVariation_Igrf12_MatchesReferenceValues`
-4. `SecularVariation_Igrf14_MatchesReferenceValues`
+4. `SecularVariation_Igrf14_MatchesReferenceValues` — 36 `[DataRow]` entries
+   - Asserts: ChangePerYear for all 7 components
+   - All at tight tolerance
 
 ### DataRow Format
 
@@ -93,6 +94,8 @@ Same as WMM2025 tests — all primitives:
 |-----------|-------------------|----------------------------------------|
 | Intensity (X, Y, Z, H, F) | 1.0 nT | 50.0 nT |
 | Angles (D, I) | 0.01° | 0.5° |
+| SV intensity (Xdot, Ydot, Zdot, Hdot, Fdot) | 1.0 nT/yr | 5.0 nT/yr |
+| SV angles (Ddot, Idot) | 0.01°/yr | 0.1°/yr |
 
 **Rationale:**
 - Definitive epochs use identical coefficients → differences are purely numerical precision
@@ -106,9 +109,10 @@ Reference values generated from NOAA IGRF-14 online calculator:
 - JSON exports stored in `tests/GeoMagSharp.Tests/TestData/IGRF_JSON/`
 - CSV reference files in `tests/GeoMagSharp.Tests/TestData/`:
   - `IGRF_CrossValidation_MainField.csv` (36 rows, all epochs)
-  - `IGRF_CrossValidation_SecularVariation.csv` (placeholder — see SV Data Note)
+  - `IGRF_CrossValidation_SecularVariation.csv` (36 rows, all epochs — from single-date queries)
+- Single-date JSON exports stored in `tests/GeoMagSharp.Tests/TestData/IGRF_JSON_SINGLE/`
 
-**SV Data Note:** NOAA's multi-epoch JSON export returns constant SV across all epochs (calculator limitation). The SV CSV currently contains these constant values, which are not suitable for cross-validation. Accurate epoch-specific SV values require individual single-date queries from the NOAA calculator. SV test methods will be added once this data is available.
+**SV Data Note:** NOAA's multi-epoch JSON export returns constant SV across all epochs (calculator limitation). Accurate epoch-specific SV values were obtained via individual single-date queries from the NOAA calculator, stored in `IGRF_JSON_SINGLE/`.
 
 ### ClassInitialize
 
@@ -131,7 +135,8 @@ Loads IGRF12.COF (Phase 1) and IGRF14.COF (Phase 2) via `ModelReader.Read()`, us
 
 ### Phase 1
 - All 18 definitive-epoch main field tests pass within tight tolerances (1.0 nT / 0.01°)
-- All 6 non-definitive epoch (2015.0) tests pass within loose tolerances (50 nT / 0.5°)
+- All 6 non-definitive epoch (2015.0) main field tests pass within loose tolerances (50 nT / 0.5°)
+- All 24 SV tests pass within corresponding tolerance tiers
 - Tests use IGRF12.COF from TestData directory
 - Test method names follow `Method_Scenario_Expected` convention
 - NOAA source URL documented in test file comments
@@ -139,8 +144,6 @@ Loads IGRF12.COF (Phase 1) and IGRF14.COF (Phase 2) via `ModelReader.Read()`, us
 
 ### Phase 2
 - All 36 main field tests pass within tight tolerances using IGRF14.COF
+- All 36 SV tests pass within tight tolerances using IGRF14.COF
 - IGRF14.COF parses correctly via ModelReader
 - No changes to existing source code required
-
-### Deferred
-- SV tests added once accurate single-date reference data is obtained
