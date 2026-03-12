@@ -67,6 +67,7 @@ feature/* ─────── Feature development work
 - **After every release, the version number MUST be incremented.** If v1.4.0 is released, ALL subsequent builds must have a higher version (e.g., v1.5.0 or v1.4.1). Never reuse a released version number.
 - **Bump version on the first feature branch after a release.** Check the current `VersionPrefix` and increment it before any code changes.
 - **Use semantic versioning:** MAJOR = breaking API changes, MINOR = new features (backward compatible), PATCH = bug fixes.
+- **Clean up preview releases after a stable release.** Unlist or delete previous preview versions from NuGet once the stable version is published.
 
 ### Branch Protection Rules — NEVER VIOLATE
 
