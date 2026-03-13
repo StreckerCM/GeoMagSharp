@@ -1,6 +1,6 @@
 /****************************************************************************
  * File:            GeomagneticUncertainty.cs
- * Description:     ISCWSA-based geomagnetic uncertainty values
+ * Description:     Geomagnetic uncertainty values (ISCWSA or WMM error model)
  * Author:          Christopher Strecker
  * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/

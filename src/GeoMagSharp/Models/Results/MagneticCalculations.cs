@@ -149,7 +149,7 @@ namespace GeoMagSharp
         public MagneticValue TotalField { get; set; }
 
         /// <summary>
-        /// ISCWSA-based 1-sigma geomagnetic uncertainty for this calculation.
+        /// 1-sigma geomagnetic uncertainty for this calculation (ISCWSA or WMM error model).
         /// Null if model category is Unknown and no override was provided.
         /// </summary>
         public GeomagneticUncertainty Uncertainty { get; set; }

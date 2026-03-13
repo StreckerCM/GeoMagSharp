@@ -335,9 +335,6 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
-
             while (dateIdx <= timespan.Days)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -366,7 +363,12 @@ namespace GeoMagSharp
 
                 if (magCalcDate != null)
                 {
-                    magCalcDate.Uncertainty = uncertainty;
+                    magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                        _Models.Type,
+                        _CalculationOptions.ModelCategoryOverride,
+                        _CalculationOptions.UncertaintyModel,
+                        magCalcDate.HorizontalIntensity.Value);
+
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }

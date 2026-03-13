@@ -126,7 +126,8 @@ namespace GeoMagSharp
         /// <returns>Uncertainty values with location-dependent declination.</returns>
         public static GeomagneticUncertainty GetWmmUncertainty(knownModels model, double horizontalIntensity)
         {
-            var entry = ResolveWmmErrorModelEntry(model);
+            string modelKey;
+            var entry = ResolveWmmErrorModelEntry(model, out modelKey);
 
             if (entry == null)
                 throw new InvalidOperationException(
@@ -147,7 +148,7 @@ namespace GeoMagSharp
                 EastIntensity = entry.EastIntensity,
                 VerticalIntensity = entry.VerticalIntensity,
                 HorizontalIntensity = entry.HorizontalIntensity,
-                Revision = "WMM2025-TR"
+                Revision = modelKey + "-TR"
             };
         }
 
@@ -197,25 +198,25 @@ namespace GeoMagSharp
             }
         }
 
-        private static WmmErrorModelEntry ResolveWmmErrorModelEntry(knownModels model)
+        private static WmmErrorModelEntry ResolveWmmErrorModelEntry(knownModels model, out string modelKey)
         {
             var data = _wmmData.Value;
 
-            string key;
             switch (model)
             {
                 case knownModels.WMM:
-                    key = "WMM2025";
+                    modelKey = "WMM2025";
                     break;
                 case knownModels.WMMHR:
-                    key = "WMMHR2025";
+                    modelKey = "WMMHR2025";
                     break;
                 default:
+                    modelKey = null;
                     return null;
             }
 
-            if (data.Models != null && data.Models.ContainsKey(key))
-                return data.Models[key];
+            if (data.Models != null && data.Models.ContainsKey(modelKey))
+                return data.Models[modelKey];
 
             return null;
         }
