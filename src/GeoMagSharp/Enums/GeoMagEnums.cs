@@ -135,4 +135,42 @@ namespace GeoMagSharp
         /// </summary>
         InFieldReference2 = 5
     }
+
+    /// <summary>
+    /// Controls which uncertainty model is used for geomagnetic calculations.
+    /// </summary>
+    public enum UncertaintyModelPreference
+    {
+        /// <summary>
+        /// Automatic selection: uses the WMM error model for WMM/WMMHR models,
+        /// ISCWSA Level 1 for all other models.
+        /// </summary>
+        Auto = 0,
+
+        /// <summary>
+        /// Force ISCWSA Level 1 uncertainty for all model types.
+        /// </summary>
+        Iscwsa = 1,
+
+        /// <summary>
+        /// Force the model's native error model. Throws if the model has no native error model.
+        /// </summary>
+        Native = 2
+    }
+
+    /// <summary>
+    /// Identifies which uncertainty model produced the uncertainty values.
+    /// </summary>
+    public enum UncertaintySource
+    {
+        /// <summary>
+        /// ISCWSA Level 1 global constants (CDR-SM-03 Rev 8)
+        /// </summary>
+        Iscwsa = 0,
+
+        /// <summary>
+        /// WMM/WMMHR native error model with location-dependent declination uncertainty
+        /// </summary>
+        WmmErrorModel = 1
+    }
 }

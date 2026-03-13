@@ -38,6 +38,8 @@ namespace GeoMagSharp
             SurveyDepthMeters = null;
             WellboreAzimuthDeg = null;
             WellboreInclinationDeg = null;
+
+            UncertaintyModel = UncertaintyModelPreference.Auto;
         }
 
         /// <summary>
@@ -62,6 +64,8 @@ namespace GeoMagSharp
             SurveyDepthMeters = other.SurveyDepthMeters;
             WellboreAzimuthDeg = other.WellboreAzimuthDeg;
             WellboreInclinationDeg = other.WellboreInclinationDeg;
+
+            UncertaintyModel = other.UncertaintyModel;
         }
 
         #endregion
@@ -109,6 +113,12 @@ namespace GeoMagSharp
         /// Wellbore inclination (degrees, 0-180). Null to skip tool-frame error calculations (Eq 5-8).
         /// </summary>
         public double? WellboreInclinationDeg { get; set; }
+
+        /// <summary>
+        /// Controls which uncertainty model is used. Default is Auto (WMM error model for WMM/WMMHR,
+        /// ISCWSA for all other models).
+        /// </summary>
+        public UncertaintyModelPreference UncertaintyModel { get; set; }
 
         #region Getters & Setters
 

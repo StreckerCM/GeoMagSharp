@@ -130,9 +130,6 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
-
             while (dateIdx <= timespan.Days)
             {
 
@@ -148,7 +145,12 @@ namespace GeoMagSharp
 
                 if (magCalcDate != null)
                 {
-                    magCalcDate.Uncertainty = uncertainty;
+                    magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                        _Models.Type,
+                        _CalculationOptions.ModelCategoryOverride,
+                        _CalculationOptions.UncertaintyModel,
+                        magCalcDate.HorizontalIntensity.Value);
+
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }
@@ -506,10 +508,15 @@ namespace GeoMagSharp
                 magCalc.Uncertainty = new GeomagneticUncertainty
                 {
                     ModelCategory = magCalc.Uncertainty.ModelCategory,
+                    Source = magCalc.Uncertainty.Source,
                     Declination = magCalc.Uncertainty.Declination,
                     BhDependentDec = magCalc.Uncertainty.BhDependentDec,
                     TotalField = magCalc.Uncertainty.TotalField,
                     DipAngle = magCalc.Uncertainty.DipAngle,
+                    NorthIntensity = magCalc.Uncertainty.NorthIntensity,
+                    EastIntensity = magCalc.Uncertainty.EastIntensity,
+                    VerticalIntensity = magCalc.Uncertainty.VerticalIntensity,
+                    HorizontalIntensity = magCalc.Uncertainty.HorizontalIntensity,
                     Revision = magCalc.Uncertainty.Revision,
                     DepthAzimuthUncertainty = DepthCorrection.DepthAzimuthUncertaintyDeg
                 };
