@@ -61,7 +61,7 @@ namespace GeoMagSharp.Example
                 Console.WriteLine($"    Declination: +/-{u.Declination:F2} deg");
                 Console.WriteLine($"    Bh-dep Dec:  +/-{u.BhDependentDec:F0} deg*nT");
                 Console.WriteLine($"    Total Field: +/-{u.TotalField:F0} nT");
-                Console.WriteLine($"    Dip Angle:   +/-{u.DipAngle:F2} deg");
+                Console.WriteLine($"    Inclination:   +/-{u.Inclination:F2} deg");
             }
             else
             {
@@ -81,7 +81,7 @@ namespace GeoMagSharp.Example
                 var u2 = result.Uncertainty.ScaleTo(2.0);
                 Console.WriteLine($"    Declination: +/-{u2.Declination:F2} deg");
                 Console.WriteLine($"    Total Field: +/-{u2.TotalField:F0} nT");
-                Console.WriteLine($"    Dip Angle:   +/-{u2.DipAngle:F2} deg");
+                Console.WriteLine($"    Inclination:   +/-{u2.Inclination:F2} deg");
                 Console.WriteLine();
                 Console.WriteLine("  Note: Geomagnetic errors follow a Laplacian distribution,");
                 Console.WriteLine("  so scaled values are approximate at levels other than 1-sigma.");

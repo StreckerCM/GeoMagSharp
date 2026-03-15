@@ -87,7 +87,7 @@ if (result.Uncertainty != null)
     Console.WriteLine($"Category:    {result.Uncertainty.ModelCategory}");
     Console.WriteLine($"Declination: +/-{result.Uncertainty.Declination:F2} deg (1-sigma)");
     Console.WriteLine($"Total Field: +/-{result.Uncertainty.TotalField:F0} nT (1-sigma)");
-    Console.WriteLine($"Dip Angle:   +/-{result.Uncertainty.DipAngle:F2} deg (1-sigma)");
+    Console.WriteLine($"Inclination: +/-{result.Uncertainty.Inclination:F2} deg (1-sigma)");
 
     // Scale to approximate 2-sigma
     var u2 = result.Uncertainty.ScaleTo(2.0);

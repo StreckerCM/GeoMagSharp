@@ -91,7 +91,7 @@ namespace GeoMagSharp
         /// <param name="model">The detected model type.</param>
         /// <param name="overrideCategory">Optional manual override for model category.</param>
         /// <returns>Uncertainty values, or null if category is Unknown.</returns>
-        public static GeomagneticUncertainty GetIscwsaUncertainty(knownModels model, GeomagneticModelCategory? overrideCategory)
+        internal static GeomagneticUncertainty GetIscwsaUncertainty(knownModels model, GeomagneticModelCategory? overrideCategory)
         {
             var category = GetModelCategory(model, overrideCategory);
 
@@ -113,7 +113,7 @@ namespace GeoMagSharp
                 Declination = values.Declination,
                 BhDependentDec = values.BhDependentDec,
                 TotalField = values.TotalField,
-                DipAngle = values.DipAngle,
+                Inclination = values.DipAngle,
                 Revision = data.Revision
             };
         }
@@ -124,7 +124,7 @@ namespace GeoMagSharp
         /// <param name="model">The model type (must be WMM or WMMHR).</param>
         /// <param name="horizontalIntensity">Horizontal field intensity (nT) for δD calculation.</param>
         /// <returns>Uncertainty values with location-dependent declination.</returns>
-        public static GeomagneticUncertainty GetWmmUncertainty(knownModels model, double horizontalIntensity)
+        internal static GeomagneticUncertainty GetWmmUncertainty(knownModels model, double horizontalIntensity)
         {
             string modelKey;
             var entry = ResolveWmmErrorModelEntry(model, out modelKey);
@@ -143,7 +143,7 @@ namespace GeoMagSharp
                 Declination = declination,
                 BhDependentDec = 0,
                 TotalField = entry.TotalField,
-                DipAngle = entry.Inclination,
+                Inclination = entry.Inclination,
                 NorthIntensity = entry.NorthIntensity,
                 EastIntensity = entry.EastIntensity,
                 VerticalIntensity = entry.VerticalIntensity,
@@ -161,7 +161,15 @@ namespace GeoMagSharp
         /// <returns>Declination uncertainty in degrees.</returns>
         internal static double ComputeDeclinationUncertainty(double declinationBase, double declinationCoeff, double horizontalIntensity)
         {
-            if (horizontalIntensity <= 0)
+            if (double.IsNaN(horizontalIntensity) || double.IsInfinity(horizontalIntensity))
+                throw new ArgumentOutOfRangeException(nameof(horizontalIntensity),
+                    horizontalIntensity, "Horizontal intensity must be a finite number.");
+
+            if (horizontalIntensity < 0)
+                throw new ArgumentOutOfRangeException(nameof(horizontalIntensity),
+                    horizontalIntensity, "Horizontal intensity cannot be negative.");
+
+            if (horizontalIntensity == 0)
                 return 999.0;
 
             double baseSq = declinationBase * declinationBase;
@@ -244,7 +252,13 @@ namespace GeoMagSharp
                 using (var reader = new StreamReader(stream))
                 {
                     var json = reader.ReadToEnd();
-                    return JsonConvert.DeserializeObject<T>(json);
+                    var result = JsonConvert.DeserializeObject<T>(json);
+
+                    if (result == null)
+                        throw new InvalidOperationException(
+                            $"Failed to deserialize embedded resource '{resourceName}'. The JSON content could not be parsed into {typeof(T).Name}.");
+
+                    return result;
                 }
             }
         }

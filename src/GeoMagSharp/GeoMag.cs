@@ -514,7 +514,7 @@ namespace GeoMagSharp
                     Declination = magCalc.Uncertainty.Declination,
                     BhDependentDec = magCalc.Uncertainty.BhDependentDec,
                     TotalField = magCalc.Uncertainty.TotalField,
-                    DipAngle = magCalc.Uncertainty.DipAngle,
+                    Inclination = magCalc.Uncertainty.Inclination,
                     NorthIntensity = magCalc.Uncertainty.NorthIntensity,
                     EastIntensity = magCalc.Uncertainty.EastIntensity,
                     VerticalIntensity = magCalc.Uncertainty.VerticalIntensity,

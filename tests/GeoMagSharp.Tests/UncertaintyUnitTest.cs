@@ -44,7 +44,7 @@ namespace GeoMagSharp_UnitTests
                 Declination = 0.36,
                 BhDependentDec = 5000,
                 TotalField = 157,
-                DipAngle = 0.24,
+                Inclination = 0.24,
                 Revision = "Rev5.13"
             };
 
@@ -55,7 +55,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.72, scaled.Declination, 0.001);
             Assert.AreEqual(10000, scaled.BhDependentDec, 0.1);
             Assert.AreEqual(314, scaled.TotalField, 0.1);
-            Assert.AreEqual(0.48, scaled.DipAngle, 0.001);
+            Assert.AreEqual(0.48, scaled.Inclination, 0.001);
             Assert.AreEqual("Rev5.13", scaled.Revision);
             Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, scaled.ModelCategory);
         }
@@ -69,7 +69,7 @@ namespace GeoMagSharp_UnitTests
                 Declination = 0.36,
                 BhDependentDec = 5000,
                 TotalField = 157,
-                DipAngle = 0.24
+                Inclination = 0.24
             };
 
             // Act
@@ -79,7 +79,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, scaled.Declination, 0.0001);
             Assert.AreEqual(5000, scaled.BhDependentDec, 0.0001);
             Assert.AreEqual(157, scaled.TotalField, 0.0001);
-            Assert.AreEqual(0.24, scaled.DipAngle, 0.0001);
+            Assert.AreEqual(0.24, scaled.Inclination, 0.0001);
         }
 
         [TestMethod]
@@ -91,7 +91,7 @@ namespace GeoMagSharp_UnitTests
                 Declination = 0.36,
                 BhDependentDec = 5000,
                 TotalField = 157,
-                DipAngle = 0.24
+                Inclination = 0.24
             };
 
             // Act
@@ -101,7 +101,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.0, scaled.Declination, 0.0001);
             Assert.AreEqual(0.0, scaled.BhDependentDec, 0.0001);
             Assert.AreEqual(0.0, scaled.TotalField, 0.0001);
-            Assert.AreEqual(0.0, scaled.DipAngle, 0.0001);
+            Assert.AreEqual(0.0, scaled.Inclination, 0.0001);
         }
 
         [TestMethod]
@@ -113,7 +113,7 @@ namespace GeoMagSharp_UnitTests
                 Declination = 0.36,
                 BhDependentDec = 5000,
                 TotalField = 157,
-                DipAngle = 0.24,
+                Inclination = 0.24,
                 Revision = "Rev5.13"
             };
 
@@ -198,7 +198,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, result.Declination, 0.001);
             Assert.AreEqual(5000, result.BhDependentDec, 0.1);
             Assert.AreEqual(157, result.TotalField, 0.1);
-            Assert.AreEqual(0.24, result.DipAngle, 0.001);
+            Assert.AreEqual(0.24, result.Inclination, 0.001);
             Assert.AreEqual("Rev5.13", result.Revision);
         }
 
@@ -213,7 +213,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.30, result.Declination, 0.001);
             Assert.AreEqual(4118, result.BhDependentDec, 0.1);
             Assert.AreEqual(107, result.TotalField, 0.1);
-            Assert.AreEqual(0.16, result.DipAngle, 0.001);
+            Assert.AreEqual(0.16, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -228,7 +228,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, result.Declination, 0.001);
             Assert.AreEqual(5000, result.BhDependentDec, 0.1);
             Assert.AreEqual(130, result.TotalField, 0.1);
-            Assert.AreEqual(0.20, result.DipAngle, 0.001);
+            Assert.AreEqual(0.20, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -242,7 +242,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.15, result.Declination, 0.001);
             Assert.AreEqual(1500, result.BhDependentDec, 0.1);
             Assert.AreEqual(50, result.TotalField, 0.1);
-            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+            Assert.AreEqual(0.10, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -257,7 +257,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.15, result.Declination, 0.001);
             Assert.AreEqual(1500, result.BhDependentDec, 0.1);
             Assert.AreEqual(50, result.TotalField, 0.1);
-            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+            Assert.AreEqual(0.10, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -365,7 +365,7 @@ namespace GeoMagSharp_UnitTests
                 Declination = 0.36,
                 BhDependentDec = 5000,
                 TotalField = 157,
-                DipAngle = 0.24,
+                Inclination = 0.24,
                 Revision = "Rev5.13"
             };
 
@@ -474,7 +474,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(GeoMagSharp.UncertaintySource.WmmErrorModel, result.Uncertainty.Source);
             Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.Uncertainty.ModelCategory);
             Assert.AreEqual(138, result.Uncertainty.TotalField, 0.1);
-            Assert.AreEqual(0.20, result.Uncertainty.DipAngle, 0.001);
+            Assert.AreEqual(0.20, result.Uncertainty.Inclination, 0.001);
             Assert.AreEqual(137, result.Uncertainty.NorthIntensity.Value, 0.1);
         }
 
@@ -559,7 +559,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(141, result.VerticalIntensity.Value, 0.1);
             Assert.AreEqual(133, result.HorizontalIntensity.Value, 0.1);
             Assert.AreEqual(138, result.TotalField, 0.1);
-            Assert.AreEqual(0.20, result.DipAngle, 0.001);
+            Assert.AreEqual(0.20, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -575,7 +575,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(134, result.VerticalIntensity.Value, 0.1);
             Assert.AreEqual(130, result.HorizontalIntensity.Value, 0.1);
             Assert.AreEqual(134, result.TotalField, 0.1);
-            Assert.AreEqual(0.19, result.DipAngle, 0.001);
+            Assert.AreEqual(0.19, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -728,7 +728,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(141, result.Uncertainty.VerticalIntensity.Value, 0.1);
             Assert.AreEqual(133, result.Uncertainty.HorizontalIntensity.Value, 0.1);
             Assert.AreEqual(138, result.Uncertainty.TotalField, 0.1);
-            Assert.AreEqual(0.20, result.Uncertainty.DipAngle, 0.001);
+            Assert.AreEqual(0.20, result.Uncertainty.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -786,7 +786,65 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, result.Uncertainty.Declination, 0.001);
             Assert.AreEqual(5000, result.Uncertainty.BhDependentDec, 0.1);
             Assert.AreEqual(157, result.Uncertainty.TotalField, 0.1);
-            Assert.AreEqual(0.24, result.Uncertainty.DipAngle, 0.001);
+            Assert.AreEqual(0.24, result.Uncertainty.Inclination, 0.001);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.ArgumentOutOfRangeException))]
+        public void ComputeDeclinationUncertainty_NegativeH_Throws()
+        {
+            GeoMagSharp.UncertaintyDataProvider.ComputeDeclinationUncertainty(0.26, 5417, -1.0);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.ArgumentOutOfRangeException))]
+        public void ComputeDeclinationUncertainty_NaN_Throws()
+        {
+            GeoMagSharp.UncertaintyDataProvider.ComputeDeclinationUncertainty(0.26, 5417, double.NaN);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.ArgumentOutOfRangeException))]
+        public void ComputeDeclinationUncertainty_PositiveInfinity_Throws()
+        {
+            GeoMagSharp.UncertaintyDataProvider.ComputeDeclinationUncertainty(0.26, 5417, double.PositiveInfinity);
+        }
+
+        [TestMethod]
+        public void ComputeDeclinationUncertainty_ZeroH_Returns999()
+        {
+            var result = GeoMagSharp.UncertaintyDataProvider.ComputeDeclinationUncertainty(0.26, 5417, 0.0);
+            Assert.AreEqual(999.0, result, 0.001);
+        }
+
+        [TestMethod]
+        public void ScaleTo_PreservesNullNullableProperties()
+        {
+            // ISCWSA source has null NorthIntensity, EastIntensity, etc.
+            var iscwsa = GeoMagSharp.UncertaintyDataProvider.GetUncertainty(
+                GeoMagSharp.knownModels.WMM, null);
+
+            Assert.IsNull(iscwsa.NorthIntensity);
+
+            var scaled = iscwsa.ScaleTo(2.0);
+            Assert.IsNull(scaled.NorthIntensity);
+            Assert.IsNull(scaled.EastIntensity);
+            Assert.IsNull(scaled.VerticalIntensity);
+            Assert.IsNull(scaled.HorizontalIntensity);
+        }
+
+        [TestMethod]
+        public void ScaleTo_ScalesNonNullNullableProperties()
+        {
+            // WMM source has non-null component properties
+            var wmm = GeoMagSharp.UncertaintyDataProvider.GetWmmUncertainty(
+                GeoMagSharp.knownModels.WMM, 20000);
+
+            Assert.IsNotNull(wmm.NorthIntensity);
+
+            var scaled = wmm.ScaleTo(2.0);
+            Assert.AreEqual(wmm.NorthIntensity.Value * 2.0, scaled.NorthIntensity.Value, 0.1);
+            Assert.AreEqual(wmm.HorizontalIntensity.Value * 2.0, scaled.HorizontalIntensity.Value, 0.1);
         }
 
         #endregion
