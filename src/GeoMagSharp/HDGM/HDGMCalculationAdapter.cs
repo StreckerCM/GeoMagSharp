@@ -49,6 +49,32 @@ namespace GeoMagSharp.HDGM
             double depthMeters = opts.DepthInM;       // positive for depth, negative for altitude
             double decimalYear = intervalDate.ToDecimal();
 
+            // Defensive sanitization before crossing the native boundary.
+            // NaN/Infinity in any of these inputs can trigger undefined behavior
+            // in the NOAA HDGM C code, potentially crashing the hosting process.
+            if (double.IsNaN(opts.Latitude) || double.IsInfinity(opts.Latitude) ||
+                opts.Latitude < -90.0 || opts.Latitude > 90.0)
+            {
+                throw new GeoMagExceptionOutOfRange(string.Format(
+                    "Error: Latitude {0} is invalid (must be a finite value in [-90, 90]).", opts.Latitude));
+            }
+            if (double.IsNaN(opts.Longitude) || double.IsInfinity(opts.Longitude) ||
+                opts.Longitude < -180.0 || opts.Longitude > 180.0)
+            {
+                throw new GeoMagExceptionOutOfRange(string.Format(
+                    "Error: Longitude {0} is invalid (must be a finite value in [-180, 180]).", opts.Longitude));
+            }
+            if (double.IsNaN(depthMeters) || double.IsInfinity(depthMeters))
+            {
+                throw new GeoMagExceptionOutOfRange("Error: depth/elevation must be a finite value.");
+            }
+            if (double.IsNaN(decimalYear) || double.IsInfinity(decimalYear) ||
+                decimalYear < 1.0 || decimalYear > 10000.0)
+            {
+                throw new GeoMagExceptionOutOfRange(string.Format(
+                    "Error: Date {0} (decimal year) is invalid.", decimalYear));
+            }
+
             var outData = new double[25];
             int status = invoker.Calculate(opts.Latitude, opts.Longitude, depthMeters, decimalYear, outData);
 

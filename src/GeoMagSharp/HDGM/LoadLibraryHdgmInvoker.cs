@@ -38,8 +38,12 @@ namespace GeoMagSharp.HDGM
                 throw new GeoMagExceptionFileNotFound(string.Format(
                     "Error: The HDGM DLL '{0}' was not found", dllPath));
 
-            // dwFlags = 0 — default LoadLibraryEx behavior. NOAA's DLL doesn't expect altered search rules.
-            _hModule = Win32NativeMethods.LoadLibraryEx(dllPath, IntPtr.Zero, 0);
+            // Canonicalize to absolute path before LoadLibraryEx to prevent DLL planting
+            // via relative-path search order. LOAD_WITH_ALTERED_SEARCH_PATH requires an
+            // absolute path and uses the DLL's own directory for dependency resolution.
+            string absolutePath = Path.GetFullPath(dllPath);
+
+            _hModule = Win32NativeMethods.LoadLibraryEx(absolutePath, IntPtr.Zero, Win32NativeMethods.LOAD_WITH_ALTERED_SEARCH_PATH);
             if (_hModule == IntPtr.Zero)
             {
                 int err = Marshal.GetLastWin32Error();
@@ -49,8 +53,8 @@ namespace GeoMagSharp.HDGM
                         IntPtr.Size == 8 ? "64" : "32")
                     : ". If the file exists and is the correct bitness, check that antivirus has not quarantined it.";
                 throw new GeoMagExceptionModelNotLoaded(string.Format(
-                    "Error: Failed to load HDGM DLL '{0}': Win32 error {1} — {2}{3}",
-                    dllPath, err, description, hint));
+                    "Error: Failed to load HDGM DLL '{0}': Win32 error {1} - {2}{3}",
+                    Path.GetFileName(absolutePath), err, description, hint));
             }
 
             IntPtr fnPtr = Win32NativeMethods.GetProcAddress(_hModule, "hdgmcalc");
@@ -62,7 +66,7 @@ namespace GeoMagSharp.HDGM
                 throw new GeoMagExceptionModelNotLoaded(string.Format(
                     "Error: DLL '{0}' loaded but 'hdgmcalc' symbol not found (Win32 error {1}). " +
                     "The file may not be a valid HDGM DLL, or the version may be unsupported.",
-                    dllPath, err));
+                    Path.GetFileName(absolutePath), err));
             }
 
             _delegate = (HdgmCalcDelegate)Marshal.GetDelegateForFunctionPointer(fnPtr, typeof(HdgmCalcDelegate));

@@ -40,6 +40,14 @@ namespace GeoMagSharp.HDGM.Native
         internal const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
         internal const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
 
+        /// <summary>
+        /// LoadLibraryEx flag: when path is fully qualified, use the directory
+        /// of the DLL as the search path for its dependencies, and DO NOT use
+        /// the default search order (which includes cwd / PATH).
+        /// Mitigates DLL planting attacks.
+        /// </summary>
+        internal const uint LOAD_WITH_ALTERED_SEARCH_PATH = 0x00000008;
+
         /// <summary>Returns a human-readable description of a Win32 error code.</summary>
         internal static string GetWin32ErrorMessage(int errorCode)
         {

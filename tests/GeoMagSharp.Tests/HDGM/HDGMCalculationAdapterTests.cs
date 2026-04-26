@@ -282,6 +282,44 @@ namespace GeoMagSharp_UnitTests.HDGM
             HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, null);
         }
 
+        // ── Input validation: NaN / Infinity / out-of-range ─────────────
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void Calculate_NaNLatitude_ThrowsOutOfRange()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Latitude = double.NaN;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void Calculate_InfinityLongitude_ThrowsOutOfRange()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Longitude = double.PositiveInfinity;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void Calculate_LatitudeAbove90_ThrowsOutOfRange()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Latitude = 91.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void Calculate_LongitudeBelow180_ThrowsOutOfRange()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Longitude = -181.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+        }
+
         // ── Inputs passed correctly to native ──────────────────────────
 
         [TestMethod]
