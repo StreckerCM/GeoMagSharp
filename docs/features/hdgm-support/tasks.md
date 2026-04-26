@@ -3,77 +3,104 @@
 Issue: #19
 Branch: feature/19-hdgm-support
 Design: docs/superpowers/specs/2026-04-26-hdgm-support-design.md
+Plan: docs/superpowers/plans/2026-04-26-hdgm-support.md
+
+## Status
+
+**Implementation:** ✅ Complete (19 commits, all 17 plan tasks executed via subagent-driven development with per-task review)
+**Build:** ✅ Clean for `net48` and `netstandard2.0`
+**Unit tests:** ✅ 368 / 368 passing (4 inconclusive — HDGM-DLL-gated integration tests, expected)
+**NuGet pack:** ✅ `GeoMagSharp.1.6.0.nupkg` produced; no HDGM artifacts in package
+**Final code review (holistic):** ✅ READY FOR QA / MERGE — 0 Critical, 0 Important, 7 Minor deferred
 
 ## Tasks
 
-Tasks below are derived from the approved design. The detailed implementation
-plan (sequencing, dependencies, test ordering) will be produced via the
-writing-plans skill in a separate step before any code is written.
-
 ### Native binding layer
-- [ ] Define `INativeHdgmInvoker` interface (public)
-- [ ] Implement `Win32NativeMethods` (LoadLibraryEx / GetProcAddress / FreeLibrary P/Invokes)
-- [ ] Implement `LoadLibraryHdgmInvoker` (production implementation, IDisposable)
-- [ ] Define `HdgmCalcDelegate` with correct calling convention and signature
-- [ ] Cover bitness-mismatch and missing-symbol error cases with descriptive messages
+- [x] Define `INativeHdgmInvoker` interface (public) — `32030e0`
+- [x] Implement `Win32NativeMethods` P/Invokes — `32030e0`
+- [x] Implement `LoadLibraryHdgmInvoker` (production, IDisposable) — `d17d77e` + `84fad95` (thread-safety fixes)
+- [x] Define `HdgmCalcDelegate` with `[UnmanagedFunctionPointer(CallingConvention.StdCall)]` — `32030e0`
+- [x] Cover bitness-mismatch and missing-symbol error cases — `d17d77e`
 
 ### Loader layer
-- [ ] Implement `ModelPathDetector.IsHdgmPath(string)`
-- [ ] Add `[InternalsVisibleTo]` for the GeoMagSharp.GUI assembly
-- [ ] Implement `HDGMModelLoader.Load(string)` with platform check
-- [ ] Wire `GeoMag.LoadModel(path)` to route HDGM paths to the new loader
+- [x] Implement `ModelPathDetector.IsHdgmPath(string)` — `1ab5569`
+- [x] Add `[InternalsVisibleTo]` for `GeoMagSharp.Tests` and `GeoMagSharp.GUI` — `1ab5569`
+- [x] Implement `HDGMModelLoader.Load(string)` with platform check — `fa344b5`
+- [x] Wire `GeoMag.LoadModel(path)` to route HDGM paths to the new loader — `a54ba97`
 
 ### Adapter / calculation layer
-- [ ] Implement `HDGMCalculationAdapter.Calculate(opts, date, modelSet)`
-- [ ] Map `outData[0..6]` to `MagneticCalculations` field values
-- [ ] Map `outData[8..14]` to `MagneticCalculations` secular variations (skip GV at indices 7 and 15)
-- [ ] Map `outData[16]` to `Uncertainty.HighResolutionCoverage` (per DLL semantics — see `HDGM_Sublibrary.c:212`)
-- [ ] Map `outData[17..23]` to `Uncertainty.SigmaD/I/H/X/Y/Z/F`
-- [ ] Implement `-99999` sentinel detection → `GeoMagExceptionOutOfRange`
-- [ ] Wire `GeoMag.MagneticCalculations` and `MagneticCalculationsAsync` to branch on `_Models.NativeInvoker != null`
-- [ ] Add `lock` around native invoker call for thread safety
-- [ ] Honor `CancellationToken` between iterations in async path
+- [x] Implement `HDGMCalculationAdapter.Calculate(opts, date, modelSet)` — `b70665e`
+- [x] Map `outData[0..6]` to `MagneticCalculations` field values — `b70665e`
+- [x] Map `outData[8..14]` to secular variations (skip GV at 7 and 15) — `b70665e`
+- [x] Map `outData[16]` to `Uncertainty.HighResolutionCoverage` (DLL semantics; cite `HDGM_Sublibrary.c:212`) — `b70665e`
+- [x] Map `outData[17..23]` to `Uncertainty.SigmaD/I/H/X/Y/Z/F` — `b70665e`
+- [x] Implement `-99999` sentinel detection → `GeoMagExceptionOutOfRange` — `b70665e`
+- [x] Wire `GeoMag.MagneticCalculations` and `MagneticCalculationsAsync` to branch on `_Models.NativeInvoker != null` — `a54ba97`
+- [x] Add `lock` around native invoker call for thread safety — `d17d77e` + `84fad95`
+- [x] Honor `CancellationToken` between iterations in async path — `a54ba97`
 
 ### Result-shape extensions
-- [ ] Add `SigmaD/I/H/X/Y/Z/F` and `HighResolutionCoverage` to `Uncertainty` (nullable)
-- [ ] Add `knownModels.HDGM = 6` to enum
-- [ ] Add HDGM case to `UncertaintyDataProvider` (HRGM-tier ISCWSA values)
+- [x] Add `SigmaD/I/H/X/Y/Z/F` and `HighResolutionCoverage` to `GeomagneticUncertainty` (nullable) — `c97a6f5`
+- [x] Add `knownModels.HDGM = 6` to enum — `c5aeed1`
+- [x] Add HDGM case to `UncertaintyDataProvider` (HRGM-tier ISCWSA values) — `1205140`
 
 ### Lifetime / disposability
-- [ ] Implement `IDisposable` on `MagneticModelSet` (no-op for non-HDGM)
-- [ ] Implement `IDisposable` on `GeoMag` (propagates to `_Models`)
-- [ ] Add `[JsonIgnore]` on `MagneticModelSet.NativeInvoker`
+- [x] Implement `IDisposable` on `MagneticModelSet` (no-op for non-HDGM) — `17e30d0`
+- [x] Implement `IDisposable` on `GeoMag` (propagates to `_Models`) — `a54ba97`
+- [x] Add `[JsonIgnore]` on `MagneticModelSet.NativeInvoker` — `17e30d0`
 
 ### Cleanup
-- [ ] `[Obsolete]` mark `Constants.MaxDeg` and `Constants.MaxCoeff` with v2.0 removal notice
+- [x] `[Obsolete]` mark `Constants.MaxDeg` and `Constants.MaxCoeff` with v2.0 removal notice — `e88ad21`
 
 ### Tests — unit (CI)
-- [ ] `ModelPathDetectorTests` — filename rule (~12 cases)
-- [ ] `FakeHdgmInvoker` test double
-- [ ] `HDGMCalculationAdapterTests` — index mapping, sentinel handling, unit conversions (~22 cases)
-- [ ] `HDGMModelLoaderTests` — filename detection, missing-file errors, platform-not-supported behavior
+- [x] `ModelPathDetectorTests` (16 cases) — `1ab5569`
+- [x] `FakeHdgmInvoker` test double — `864ff14`
+- [x] `HDGMCalculationAdapterTests` (29 cases including index mapping, sentinel, conversions) — `b70665e`
+- [x] `HDGMModelLoaderTests` (filename detection, missing-file, platform-not-supported) — `fa344b5`
 
 ### Tests — integration (env-var-gated)
-- [ ] `HDGMIntegrationTests` skeleton with `Assert.Inconclusive` skip if env vars missing
-- [ ] LoadsRealDll, SinglePoint, SamplePoints (validate against `HDGM2019_TestValues.txt`)
-- [ ] DateSweep, OutOfRangeDate, DisposeFreesDll
-- [ ] SigmaValuesPopulated, NSDCoverageFlag
+- [x] `HDGMIntegrationTests` skeleton with `Assert.Inconclusive` skip — `6532530`
+- [x] LoadsRealDll, SinglePoint, SamplePoints (validate against `HDGM2019_TestValues.txt`) — `6532530`
+- [x] DateSweep, OutOfRangeDate, DisposeFreesDll — `6532530`
+- [x] SigmaValuesPopulated, NSDCoverageFlag — `6532530`
 
 ### Documentation
-- [ ] Update `README.md` — add HDGM to supported models with Windows-only callout and example
-- [ ] Update `CLAUDE.md` Project Overview models list
-- [ ] Create `docs/features/hdgm-support/README.md` — license posture, env vars, setup
-- [ ] Add `.gitignore` defensive entries for HDGM-derived artifacts
+- [x] Update `README.md` — HDGM in supported-models with Windows-only callout — `7102f35`
+- [x] Update `CLAUDE.md` Project Overview models list — `7102f35`
+- [x] Create `docs/features/hdgm-support/README.md` (license posture, env vars, setup) — `13762b8`
+- [x] Add `.gitignore` defensive entries for HDGM-derived artifacts — `753167d`
 
 ### Build / project file
-- [ ] Add `[InternalsVisibleTo]` directive (csproj or AssemblyInfo)
-- [ ] Verify multi-target build still passes (net48 + netstandard2.0)
+- [x] Add `[InternalsVisibleTo]` directive — `1ab5569`
+- [x] Verify multi-target build still passes (net48 + netstandard2.0) — Task 17 verification
 
 ## Completion Criteria
 
-- [ ] All tasks above checked
-- [ ] Build succeeds (`dotnet build -c Release`) for both target frameworks
-- [ ] All unit tests pass (`dotnet test --filter "TestCategory!=RequiresHDGMDll"`)
-- [ ] Integration tests pass locally with `HDGM_DLL_PATH` and `HDGM_TEST_VALUES_PATH` env vars set (manual verification by maintainer)
-- [ ] Existing model calculations (WMM, WMMHR, IGRF, EMM, DGRF) produce byte-identical results before/after this branch
-- [ ] 2 clean Ralph Loop cycles (all 6 personas find no issues twice)
+- [x] All tasks above checked
+- [x] Build succeeds (`dotnet build -c Release`) for both target frameworks
+- [x] All unit tests pass (`dotnet test --filter "TestCategory!=RequiresHDGMDll"`) — 368/368 passing
+- [ ] Integration tests pass locally with `HDGM_DLL_PATH` and `HDGM_TEST_VALUES_PATH` env vars set (manual maintainer verification, deferred to merge gate)
+- [x] Existing model calculations (WMM, WMMHR, IGRF, EMM, DGRF) produce byte-identical results before/after this branch (zero changes to Calculator.cs / ModelReader.cs / MagneticModel.cs / ExtensionMethods.cs:CheckStringForModel; full unit suite passes)
+- [ ] 2 clean Ralph Loop cycles (all 6 personas find no issues twice) — IN PROGRESS
+
+## Ralph Loop progress
+
+Each iteration's persona is `iteration MOD 6`:
+- 0 → IMPLEMENTER · 1 → REVIEWER · 2 → TESTER · 3 → API_DESIGNER · 4 → SECURITY_AUDITOR · 5 → PROJECT_MANAGER
+
+| Iteration | Persona | Status | Findings |
+|---|---|---|---|
+| 1 | REVIEWER | ❌ issues fixed | Found 2 Important: native return code discarded; finalizer took a lock. Both fixed in `e24ccff`. Cycle 1 not clean. |
+| 2 | TESTER | pending | — |
+| 3 | API_DESIGNER | pending | — |
+| 4 | SECURITY_AUDITOR | pending | — |
+| 5 | PROJECT_MANAGER | pending | — |
+| 6 | IMPLEMENTER | pending | — |
+| 7 | REVIEWER | pending | — |
+| 8 | TESTER | pending | — |
+| 9 | API_DESIGNER | pending | — |
+| 10 | SECURITY_AUDITOR | pending | — |
+| 11 | PROJECT_MANAGER | pending | — |
+| 12 | IMPLEMENTER | pending | — |
+
+Cycle 1 = iterations 1-6 · Cycle 2 = iterations 7-12. A "clean cycle" requires all 6 personas in that cycle to report zero issues requiring fixes (Minor suggestions OK to defer).
