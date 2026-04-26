@@ -95,7 +95,7 @@ Each iteration's persona is `iteration MOD 6`:
 | 3 | API_DESIGNER | ❌ issues fixed | Found 2 Important: INativeHdgmInvoker public but no injection path; copy ctor silently drops NativeInvoker. Both fixed in `add4e7f` (added LoadModel(invoker) overload + copy ctor docs). Cycle 1 still not clean. |
 | 4 | SECURITY_AUDITOR | ❌ issues fixed | Found 1 Critical (DLL planting) + 2 Important (NaN/Inf inputs, info disclosure). All addressed in `fef639b`. Cycle 1 still not clean. |
 | 5 | PROJECT_MANAGER | ✅ CLEAN | Spec traceability 100%, task list accurate, no scope creep, no Critical/Important issues. First clean iter of cycle 1. |
-| 6 | IMPLEMENTER | pending | — |
+| 6 | IMPLEMENTER | ✅ CLEAN | Build green for both targets, 368/368 unit tests pass, zero TODOs in HDGM code, all 17 task SHAs verified. Cycle 1 closes; iters 5+6 clean, iters 1-4 had findings (all fixed). |
 | 7 | REVIEWER | pending | — |
 | 8 | TESTER | pending | — |
 | 9 | API_DESIGNER | pending | — |
