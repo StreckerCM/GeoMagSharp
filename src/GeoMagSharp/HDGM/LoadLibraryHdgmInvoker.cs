@@ -79,6 +79,8 @@ namespace GeoMagSharp.HDGM
             // The NOAA DLL is not documented as thread-safe; serialize at the native boundary.
             lock (_syncRoot)
             {
+                if (_disposed)
+                    throw new ObjectDisposedException(nameof(LoadLibraryHdgmInvoker));
                 return _delegate(latitude, longitude, depthMeters, decimalYear,
                     /* usePomme */ 0, /* useDifi */ 0, outData);
             }
@@ -87,14 +89,17 @@ namespace GeoMagSharp.HDGM
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
-            if (_hModule != IntPtr.Zero)
+            lock (_syncRoot)
             {
-                Win32NativeMethods.FreeLibrary(_hModule);
-                _hModule = IntPtr.Zero;
+                if (_disposed) return;
+                _disposed = true;
+                if (_hModule != IntPtr.Zero)
+                {
+                    Win32NativeMethods.FreeLibrary(_hModule);
+                    _hModule = IntPtr.Zero;
+                }
+                _delegate = null;
             }
-            _delegate = null;
         }
 
         ~LoadLibraryHdgmInvoker() { Dispose(); }
