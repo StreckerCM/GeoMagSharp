@@ -372,5 +372,47 @@ namespace GeoMagSharp_UnitTests.HDGM
             Assert.IsTrue(fake.Calls[0].DecimalYear > 2020.49 && fake.Calls[0].DecimalYear < 2020.51,
                 $"DecimalYear={fake.Calls[0].DecimalYear} not in expected range");
         }
+
+        // ── Boundary-value acceptance: lat/lon at exact limits ───────────
+
+        [TestMethod]
+        public void Calculate_Latitude90_Accepted()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Latitude = 90.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+            Assert.AreEqual(1, fake.Calls.Count);
+            Assert.AreEqual(90.0, fake.Calls[0].Latitude, 1e-9);
+        }
+
+        [TestMethod]
+        public void Calculate_LatitudeMinus90_Accepted()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Latitude = -90.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+            Assert.AreEqual(1, fake.Calls.Count);
+            Assert.AreEqual(-90.0, fake.Calls[0].Latitude, 1e-9);
+        }
+
+        [TestMethod]
+        public void Calculate_Longitude180_Accepted()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Longitude = 180.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+            Assert.AreEqual(1, fake.Calls.Count);
+            Assert.AreEqual(180.0, fake.Calls[0].Longitude, 1e-9);
+        }
+
+        [TestMethod]
+        public void Calculate_LongitudeMinus180_Accepted()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            var opts = DefaultOpts(); opts.Longitude = -180.0;
+            HDGMCalculationAdapter.Calculate(opts, opts.StartDate, fake);
+            Assert.AreEqual(1, fake.Calls.Count);
+            Assert.AreEqual(-180.0, fake.Calls[0].Longitude, 1e-9);
+        }
     }
 }
