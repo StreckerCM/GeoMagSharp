@@ -75,7 +75,7 @@ namespace GeoMagSharp_UnitTests.HDGM
                 StepInterval = 1
             });
             // Date stepping in existing GeoMag.MagneticCalculations: 6 days → 6 iterations
-            Assert.IsTrue(fake.Calls.Count >= 1);
+            Assert.AreEqual(6, fake.Calls.Count, "expected one native call per day in the 6-day sweep");
         }
 
         [TestMethod]
@@ -103,6 +103,18 @@ namespace GeoMagSharp_UnitTests.HDGM
             {
                 Assert.IsTrue(geo is IDisposable);
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionModelNotLoaded))]
+        public void MagneticCalculations_AfterDispose_ThrowsModelNotLoaded()
+        {
+            var geo = NewGeoMagWithFakeHDGM(new double[25]);
+            geo.Dispose();
+            geo.MagneticCalculations(new CalculationOptions
+            {
+                Latitude = 40.0, Longitude = -100.0, StartDate = new DateTime(2020, 6, 1)
+            });
         }
     }
 }

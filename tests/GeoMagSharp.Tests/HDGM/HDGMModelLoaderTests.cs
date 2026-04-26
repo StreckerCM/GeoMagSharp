@@ -58,5 +58,12 @@ namespace GeoMagSharp_UnitTests.HDGM
             }
             HDGMModelLoader.Load(@"C:\__definitely_not_real__\hdgm2019-64.dll");
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Load_WhitespaceOnly_ThrowsArgumentNull()
+        {
+            HDGMModelLoader.Load("   ");
+        }
     }
 }

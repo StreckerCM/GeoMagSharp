@@ -74,5 +74,31 @@ namespace GeoMagSharp_UnitTests.HDGM
             Assert.IsNull(scaled.SigmaD);
             Assert.IsNull(scaled.HighResolutionCoverage);
         }
+
+        [TestMethod]
+        public void ScaleTo_ZeroFactor_AllPerPointSigmasAreZero()
+        {
+            var u = new GeomagneticUncertainty
+            {
+                SigmaD = 0.5, SigmaI = 0.5, SigmaH = 100, SigmaX = 50, SigmaY = 60, SigmaZ = 70, SigmaF = 110
+            };
+            var scaled = u.ScaleTo(0.0);
+            Assert.AreEqual(0.0, scaled.SigmaD);
+            Assert.AreEqual(0.0, scaled.SigmaI);
+            Assert.AreEqual(0.0, scaled.SigmaH);
+            Assert.AreEqual(0.0, scaled.SigmaX);
+            Assert.AreEqual(0.0, scaled.SigmaY);
+            Assert.AreEqual(0.0, scaled.SigmaZ);
+            Assert.AreEqual(0.0, scaled.SigmaF);
+        }
+
+        [TestMethod]
+        public void ScaleTo_NegativeFactor_ProducesNegativeSigmas()
+        {
+            var u = new GeomagneticUncertainty { SigmaD = 0.5, SigmaH = 100 };
+            var scaled = u.ScaleTo(-1.0);
+            Assert.AreEqual(-0.5, scaled.SigmaD);
+            Assert.AreEqual(-100, scaled.SigmaH);
+        }
     }
 }

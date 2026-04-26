@@ -265,6 +265,23 @@ namespace GeoMagSharp_UnitTests.HDGM
             HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
         }
 
+        // ── Null-argument guards ─────────────────────────────────────────
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Calculate_NullOpts_ThrowsArgumentNull()
+        {
+            var fake = FakeReturning(OutDataAllZero());
+            HDGMCalculationAdapter.Calculate(null, new DateTime(2020, 6, 1), fake);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Calculate_NullInvoker_ThrowsArgumentNull()
+        {
+            HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, null);
+        }
+
         // ── Inputs passed correctly to native ──────────────────────────
 
         [TestMethod]

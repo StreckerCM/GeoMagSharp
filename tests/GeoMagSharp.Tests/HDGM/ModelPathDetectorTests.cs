@@ -76,5 +76,17 @@ namespace GeoMagSharp_UnitTests.HDGM
         [TestMethod]
         public void IsHdgmPath_Null_ReturnsFalse() =>
             Assert.IsFalse(ModelPathDetector.IsHdgmPath(null));
+
+        [TestMethod]
+        public void IsHdgmPath_TrailingSlashOnly_ReturnsFalse() =>
+            Assert.IsFalse(ModelPathDetector.IsHdgmPath(@"C:\foo\hdgm\"));
+
+        [TestMethod]
+        public void IsHdgmPath_PathWithInvalidCharacters_ReturnsFalse() =>
+            Assert.IsFalse(ModelPathDetector.IsHdgmPath("hdgm<>|\".dll"));
+
+        [TestMethod]
+        public void IsHdgmPath_UnicodeFilename_ReturnsTrue() =>
+            Assert.IsTrue(ModelPathDetector.IsHdgmPath("hdgm_日本語.dll"));
     }
 }
