@@ -102,6 +102,30 @@ namespace GeoMagSharp
         }
 
         /// <summary>
+        /// Loads HDGM (or another high-resolution model) using a caller-provided native invoker.
+        /// Advanced extension point: third-party drivers, in-memory mocks for testing,
+        /// or alternative DLL loaders that bypass the file-path heuristic of <see cref="LoadModel(string)"/>.
+        /// </summary>
+        /// <param name="invoker">A non-null INativeHdgmInvoker. The GeoMag instance takes
+        /// ownership; disposing the GeoMag will dispose the invoker.</param>
+        /// <param name="modelName">Optional display name for the model (defaults to "HDGM-CUSTOM").</param>
+        /// <exception cref="ArgumentNullException">If <paramref name="invoker"/> is null.</exception>
+        public void LoadModel(INativeHdgmInvoker invoker, string modelName = "HDGM-CUSTOM")
+        {
+            if (invoker == null) throw new ArgumentNullException(nameof(invoker));
+
+            _Models = null;
+            _Models = new MagneticModelSet
+            {
+                Type = knownModels.HDGM,
+                Name = string.IsNullOrWhiteSpace(modelName) ? "HDGM-CUSTOM" : modelName,
+                MinDate = 1900.0,
+                MaxDate = 9999.0,
+                NativeInvoker = invoker
+            };
+        }
+
+        /// <summary>
         /// Performs magnetic field calculations over the specified date range and location.
         /// Results are stored in <see cref="ResultsOfCalculation"/>.
         /// </summary>

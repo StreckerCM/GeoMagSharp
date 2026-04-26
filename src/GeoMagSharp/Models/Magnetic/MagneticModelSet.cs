@@ -32,6 +32,15 @@ namespace GeoMagSharp
         /// <summary>
         /// Initializes a new instance by copying values from another <see cref="MagneticModelSet"/>.
         /// </summary>
+        /// <remarks>
+        /// HDGM model sets carry a native DLL handle (NativeInvoker) which is NOT copied
+        /// by this constructor — the original retains ownership. The resulting copy will
+        /// behave as a non-HDGM model set and calculations on it will throw
+        /// <see cref="GeoMagExceptionModelNotLoaded"/>. To use HDGM with multiple GeoMag
+        /// instances, load the DLL separately into each (via
+        /// <see cref="GeoMag.LoadModel(string)"/> or
+        /// <see cref="GeoMag.LoadModel(INativeHdgmInvoker, string)"/>).
+        /// </remarks>
         /// <param name="other">The source model set to copy.</param>
         public MagneticModelSet(MagneticModelSet other)
         {
