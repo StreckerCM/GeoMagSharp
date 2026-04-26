@@ -1,6 +1,8 @@
 /****************************************************************************
  * File:            Win32NativeMethods.cs
  * Description:     P/Invoke wrappers for Windows DLL loading APIs
+ * Author:          Christopher Strecker
+ * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
 
 using System;

@@ -1,6 +1,8 @@
 /****************************************************************************
  * File:            HdgmCalcDelegate.cs
  * Description:     Native delegate matching NOAA hdgmcalc() function signature
+ * Author:          Christopher Strecker
+ * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
 
 using System.Runtime.InteropServices;
