@@ -45,6 +45,39 @@ namespace GeoMagSharp
         public double? DepthAzimuthUncertainty { get; set; }
 
         /// <summary>
+        /// Per-point σ for declination in degrees, 1-sigma. Populated by HDGM and other
+        /// models that provide location-specific uncertainty. Null if the model only
+        /// provides global ISCWSA values (the existing <see cref="Declination"/> field).
+        /// </summary>
+        public double? SigmaD { get; set; }
+
+        /// <summary>Per-point σ for inclination in degrees, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaI { get; set; }
+
+        /// <summary>Per-point σ for horizontal intensity in nT, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaH { get; set; }
+
+        /// <summary>Per-point σ for the X (north) component in nT, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaX { get; set; }
+
+        /// <summary>Per-point σ for the Y (east) component in nT, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaY { get; set; }
+
+        /// <summary>Per-point σ for the Z (down) component in nT, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaZ { get; set; }
+
+        /// <summary>Per-point σ for total field intensity in nT, 1-sigma. Null when not provided by the model.</summary>
+        public double? SigmaF { get; set; }
+
+        /// <summary>
+        /// True if the queried location is in a high-resolution survey-covered region
+        /// (28 km half-wavelength, e.g., HDGM's NSD-covered areas).
+        /// False for satellite-only fallback regions (~150 km half-wavelength).
+        /// Null if the model does not provide per-location coverage information.
+        /// </summary>
+        public bool? HighResolutionCoverage { get; set; }
+
+        /// <summary>
         /// Returns a new instance with all uncertainty values multiplied by the given scale factor.
         /// Note: This is a linear approximation. Geomagnetic errors follow a Laplacian
         /// (non-Gaussian) distribution, so scaled values are approximate at levels other than 1-sigma.
@@ -62,7 +95,15 @@ namespace GeoMagSharp
                 Revision = Revision,
                 DepthAzimuthUncertainty = DepthAzimuthUncertainty.HasValue
                     ? DepthAzimuthUncertainty.Value * scaleFactor
-                    : (double?)null
+                    : (double?)null,
+                SigmaD = SigmaD.HasValue ? SigmaD.Value * scaleFactor : (double?)null,
+                SigmaI = SigmaI.HasValue ? SigmaI.Value * scaleFactor : (double?)null,
+                SigmaH = SigmaH.HasValue ? SigmaH.Value * scaleFactor : (double?)null,
+                SigmaX = SigmaX.HasValue ? SigmaX.Value * scaleFactor : (double?)null,
+                SigmaY = SigmaY.HasValue ? SigmaY.Value * scaleFactor : (double?)null,
+                SigmaZ = SigmaZ.HasValue ? SigmaZ.Value * scaleFactor : (double?)null,
+                SigmaF = SigmaF.HasValue ? SigmaF.Value * scaleFactor : (double?)null,
+                HighResolutionCoverage = HighResolutionCoverage  // bool flag — not scaled
             };
         }
     }
