@@ -91,7 +91,7 @@ Each iteration's persona is `iteration MOD 6`:
 | Iteration | Persona | Status | Findings |
 |---|---|---|---|
 | 1 | REVIEWER | ❌ issues fixed | Found 2 Important: native return code discarded; finalizer took a lock. Both fixed in `e24ccff`. Cycle 1 not clean. |
-| 2 | TESTER | pending | — |
+| 2 | TESTER | ❌ issues fixed | Found ~10 coverage gaps + 1 weak assertion. All addressed in `5dd14f9` (10 new tests, 1 assertion tightened). Cycle 1 still not clean. |
 | 3 | API_DESIGNER | pending | — |
 | 4 | SECURITY_AUDITOR | pending | — |
 | 5 | PROJECT_MANAGER | pending | — |
