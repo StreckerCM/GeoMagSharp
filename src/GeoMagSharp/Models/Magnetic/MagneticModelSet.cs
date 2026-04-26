@@ -5,6 +5,7 @@
  * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
 
+using GeoMagSharp.HDGM;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace GeoMagSharp
     /// Magnetic Model Set Object - contains multiple models (main, secular variation, external)
     /// for a specific magnetic field model like WMM, IGRF, etc.
     /// </summary>
-    public class MagneticModelSet
+    public class MagneticModelSet : IDisposable
     {
         #region Constructors
 
@@ -435,6 +436,27 @@ namespace GeoMagSharp
 
                 return Models.Count;
             }
+        }
+
+        /// <summary>
+        /// Native HDGM invoker handle. Null for non-HDGM model sets. Internal — HDGM
+        /// detection in client code should rely on Type == knownModels.HDGM rather
+        /// than reaching for this field.
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        internal INativeHdgmInvoker NativeInvoker { get; set; }
+
+        private bool _disposed;
+
+        /// <summary>
+        /// Releases the native HDGM DLL handle if one is held. No-op for non-HDGM model sets.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            NativeInvoker?.Dispose();
+            NativeInvoker = null;
         }
 
         #endregion
