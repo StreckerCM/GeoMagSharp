@@ -95,7 +95,14 @@ namespace GeoMagSharp
         /// Not in ISCWSA Rev5.13 (predates it); classified as HighResolution (HRGM)
         /// based on SH degree (729).
         /// </summary>
-        WMMHR = 5
+        WMMHR = 5,
+
+        /// <summary>
+        /// High Definition Geomagnetic Model (NOAA degree-740 crustal field).
+        /// Windows-only — requires user-supplied NOAA HDGM DLL at runtime.
+        /// HighResolution category per ISCWSA Rev5.13.
+        /// </summary>
+        HDGM = 6
     }
 
     /// <summary>
