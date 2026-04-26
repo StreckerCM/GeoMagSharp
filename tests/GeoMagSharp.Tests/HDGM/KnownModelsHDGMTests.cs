@@ -1,3 +1,9 @@
+/****************************************************************************
+ * File:            KnownModelsHDGMTests.cs
+ * Description:     Sanity tests for the knownModels.HDGM enum value
+ * Author:          Christopher Strecker
+ * Website:         https://github.com/StreckerCM/GeoMagSharp
+ ****************************************************************************/
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GeoMagSharp;
 
@@ -7,13 +13,13 @@ namespace GeoMagSharp_UnitTests.HDGM
     public class KnownModelsHDGMTests
     {
         [TestMethod]
-        public void HDGMEnumValue_Equals6()
+        public void Cast_HDGMToInt_Returns6()
         {
             Assert.AreEqual(6, (int)knownModels.HDGM);
         }
 
         [TestMethod]
-        public void HDGMEnumValue_DoesNotCollideWithExisting()
+        public void Cast_ExistingValuesToInt_ValuesUnchanged()
         {
             // sanity: other enum values are unchanged
             Assert.AreEqual(0, (int)knownModels.NONE);
