@@ -244,6 +244,16 @@ namespace GeoMagSharp_UnitTests.HDGM
             Assert.AreEqual(107.0, result.Uncertainty?.SigmaF ?? double.NaN, 1e-9);
         }
 
+        // ── Native return-code handling ──────────────────────────────────
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void Calculate_NonZeroNativeStatus_ThrowsOutOfRange()
+        {
+            var fake = new FakeHdgmInvoker { CannedOutData = new double[25], CannedReturnValue = 1 };
+            HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
+        }
+
         // ── Sentinel handling ────────────────────────────────────────────
 
         [TestMethod]

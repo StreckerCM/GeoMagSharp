@@ -50,7 +50,14 @@ namespace GeoMagSharp.HDGM
             double decimalYear = intervalDate.ToDecimal();
 
             var outData = new double[25];
-            invoker.Calculate(opts.Latitude, opts.Longitude, depthMeters, decimalYear, outData);
+            int status = invoker.Calculate(opts.Latitude, opts.Longitude, depthMeters, decimalYear, outData);
+
+            if (status != 0)
+            {
+                throw new GeoMagExceptionOutOfRange(string.Format(
+                    "Error: HDGM native call returned non-zero status {0} for date {1:yyyy-MM-dd} at lat {2}, lon {3}.",
+                    status, intervalDate, opts.Latitude, opts.Longitude));
+            }
 
             if (outData[0] == Sentinel)
             {

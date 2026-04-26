@@ -89,19 +89,42 @@ namespace GeoMagSharp.HDGM
         /// <inheritdoc/>
         public void Dispose()
         {
-            lock (_syncRoot)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
             {
+                // Explicit disposal: safe to take the lock and clean up managed state.
+                lock (_syncRoot)
+                {
+                    if (_disposed) return;
+                    _disposed = true;
+                    FreeNativeHandle();
+                    _delegate = null;
+                }
+            }
+            else
+            {
+                // Finalizer path: must NOT take a lock. Just free the native handle.
                 if (_disposed) return;
                 _disposed = true;
-                if (_hModule != IntPtr.Zero)
-                {
-                    Win32NativeMethods.FreeLibrary(_hModule);
-                    _hModule = IntPtr.Zero;
-                }
+                FreeNativeHandle();
                 _delegate = null;
             }
         }
 
-        ~LoadLibraryHdgmInvoker() { Dispose(); }
+        private void FreeNativeHandle()
+        {
+            if (_hModule != IntPtr.Zero)
+            {
+                Win32NativeMethods.FreeLibrary(_hModule);
+                _hModule = IntPtr.Zero;
+            }
+        }
+
+        ~LoadLibraryHdgmInvoker() { Dispose(false); }
     }
 }
