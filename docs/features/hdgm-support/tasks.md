@@ -92,7 +92,7 @@ Each iteration's persona is `iteration MOD 6`:
 |---|---|---|---|
 | 1 | REVIEWER | ❌ issues fixed | Found 2 Important: native return code discarded; finalizer took a lock. Both fixed in `e24ccff`. Cycle 1 not clean. |
 | 2 | TESTER | ❌ issues fixed | Found ~10 coverage gaps + 1 weak assertion. All addressed in `5dd14f9` (10 new tests, 1 assertion tightened). Cycle 1 still not clean. |
-| 3 | API_DESIGNER | pending | — |
+| 3 | API_DESIGNER | ❌ issues fixed | Found 2 Important: INativeHdgmInvoker public but no injection path; copy ctor silently drops NativeInvoker. Both fixed in `add4e7f` (added LoadModel(invoker) overload + copy ctor docs). Cycle 1 still not clean. |
 | 4 | SECURITY_AUDITOR | pending | — |
 | 5 | PROJECT_MANAGER | pending | — |
 | 6 | IMPLEMENTER | pending | — |
