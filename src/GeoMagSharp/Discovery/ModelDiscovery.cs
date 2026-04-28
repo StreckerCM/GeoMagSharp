@@ -36,8 +36,77 @@ namespace GeoMagSharp
             if (folderPath == null) throw new ArgumentNullException(nameof(folderPath));
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            // Implementation lands in Task 11.
-            return new List<ModelDescriptor>();
+            return DiscoverModelsImpl(folderPath, options);
+        }
+
+        private static IEnumerable<ModelDescriptor> DiscoverModelsImpl(string folderPath, ModelDiscoveryOptions options)
+        {
+            if (!Directory.Exists(folderPath)) yield break;
+
+            var searchOption = options.Recursive
+                ? SearchOption.AllDirectories
+                : SearchOption.TopDirectoryOnly;
+
+            string cacheFileFullPath = options.UseCache
+                ? Path.GetFullPath(Path.Combine(folderPath, options.CacheFileName ?? ".models.json"))
+                : null;
+
+            foreach (string filePath in Directory.EnumerateFiles(folderPath, "*.*", searchOption))
+            {
+                options.CancellationToken.ThrowIfCancellationRequested();
+
+                // Skip the cache file itself
+                if (cacheFileFullPath != null &&
+                    string.Equals(Path.GetFullPath(filePath), cacheFileFullPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                ModelDescriptor descriptor;
+                try
+                {
+                    descriptor = ClassifyFile(filePath, options);
+                }
+                catch (Exception ex)
+                {
+                    options.OnError?.Invoke(filePath, ex);
+                    continue;
+                }
+
+                if (descriptor != null) yield return descriptor;
+            }
+        }
+
+        private static ModelDescriptor ClassifyFile(string filePath, ModelDiscoveryOptions options)
+        {
+            string ext = Path.GetExtension(filePath);
+            if (string.IsNullOrEmpty(ext)) return null;
+            string extUpper = ext.ToUpperInvariant();
+
+            if (extUpper == ".COF" || extUpper == ".DAT")
+            {
+                if (options.Mode == ScanMode.Quick)
+                {
+                    return new ModelDescriptor(filePath, knownModels.NONE,
+                        Path.GetFileNameWithoutExtension(filePath), null, null);
+                }
+                return ModelHeaderInspector.Inspect(filePath);
+            }
+
+            if (extUpper == ".DLL" && ModelPathDetector.IsHdgmPath(filePath))
+            {
+                if (options.Mode == ScanMode.Quick)
+                {
+                    return new ModelDescriptor(filePath, knownModels.HDGM,
+                        BuildHdgmDisplayName(filePath), null, null);
+                }
+                var (minDate, maxDate) = HdgmDateProbe.Probe(
+                    path => CreateRealInvokerOrNull(path), filePath);
+                return new ModelDescriptor(filePath, knownModels.HDGM,
+                    BuildHdgmDisplayName(filePath), minDate, maxDate);
+            }
+
+            return null;
         }
 
         /// <summary>

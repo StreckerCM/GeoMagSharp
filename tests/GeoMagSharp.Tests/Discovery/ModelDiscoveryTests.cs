@@ -56,5 +56,159 @@ namespace GeoMagSharp_UnitTests.Discovery
                 Assert.IsNull(d);
             }
         }
+
+        // Task 11 — folder enumeration without cache
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void DiscoverModels_NullFolderPath_Throws()
+        {
+            ModelDiscovery.DiscoverModels(null).ToList();
+        }
+
+        [TestMethod]
+        public void DiscoverModels_FolderDoesNotExist_ReturnsEmpty()
+        {
+            var results = ModelDiscovery.DiscoverModels(@"C:\definitely_not_real_folder").ToList();
+            Assert.AreEqual(0, results.Count);
+        }
+
+        [TestMethod]
+        public void DiscoverModels_QuickMode_RecognizesCofAndDllByFilename()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                fx.WriteFile("hdgm2019-64.dll", new string('x', 32));
+                fx.WriteFile("notes.txt", "irrelevant");
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath,
+                    new ModelDiscoveryOptions { Mode = ScanMode.Quick }).ToList();
+
+                Assert.AreEqual(2, results.Count);
+                Assert.IsTrue(results.Any(d => d.FilePath.EndsWith("WMM.COF")));
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.HDGM));
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_QuickMode_CofDetectedTypeIsNone()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath,
+                    new ModelDiscoveryOptions { Mode = ScanMode.Quick }).ToList();
+                var cof = results.Single();
+                Assert.AreEqual(knownModels.NONE, cof.DetectedType);
+                Assert.IsNull(cof.MinDate);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_FullMode_PopulatesCofMetadata()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath,
+                    new ModelDiscoveryOptions { Mode = ScanMode.Full }).ToList();
+                var cof = results.Single();
+                Assert.AreEqual(knownModels.WMM, cof.DetectedType);
+                Assert.AreEqual(2025.0, cof.MinDate);
+                Assert.AreEqual(2030.0, cof.MaxDate);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_FullMode_MixedFolder_HandlesAllCases()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                fx.CopyFixture("IGRF14_sample.COF", "IGRF14.COF");
+                fx.CopyFixture("corrupt_header.COF", "broken.COF");
+                fx.WriteFile("notes.txt", "ignored");
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
+                Assert.AreEqual(3, results.Count);
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.WMM));
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.IGRF));
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.NONE));
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_NonHdgmDllSkipped()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.WriteFile("randomlib.dll", new string('x', 16));
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
+                Assert.AreEqual(0, results.Count);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UnknownExtension_Skipped()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.WriteFile("notes.txt", "not a model");
+                fx.WriteFile("readme.md", "ignored");
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
+                Assert.AreEqual(0, results.Count);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_Recursive_TraversesSubfolders()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var sub = fx.CreateSubdir("nested");
+                File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                    "Discovery", "Fixtures", "IGRF14_sample.COF"),
+                    Path.Combine(sub, "IGRF14.COF"));
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath,
+                    new ModelDiscoveryOptions { Recursive = true }).ToList();
+                Assert.AreEqual(2, results.Count);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_NonRecursive_StopsAtTopLevel()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var sub = fx.CreateSubdir("nested");
+                File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                    "Discovery", "Fixtures", "IGRF14_sample.COF"),
+                    Path.Combine(sub, "IGRF14.COF"));
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
+                Assert.AreEqual(1, results.Count);
+                Assert.AreEqual(knownModels.WMM, results[0].DetectedType);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(OperationCanceledException))]
+        public void DiscoverModels_CancellationTokenTriggered_Throws()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                using (var cts = new CancellationTokenSource())
+                {
+                    cts.Cancel();
+                    ModelDiscovery.DiscoverModels(fx.FolderPath,
+                        new ModelDiscoveryOptions { CancellationToken = cts.Token }).ToList();
+                }
+            }
+        }
     }
 }
