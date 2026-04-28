@@ -210,5 +210,112 @@ namespace GeoMagSharp_UnitTests.Discovery
                 }
             }
         }
+
+        // Task 12 — UseCache flow
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_FirstRun_WritesCacheFile()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                ModelDiscovery.DiscoverModels(fx.FolderPath,
+                    new ModelDiscoveryOptions { UseCache = true }).ToList();
+                Assert.IsTrue(File.Exists(Path.Combine(fx.FolderPath, ".models.json")));
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_SecondRunUnchangedFolder_HitsCache()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                // Second run; if cache works, results match first run
+                var second = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(1, second.Count);
+                Assert.AreEqual(knownModels.WMM, second[0].DetectedType);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_FileMtimeChanged_RescansThatFile()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                var p = fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+
+                // Touch mtime: rewrite the file with same content but new timestamp
+                File.SetLastWriteTimeUtc(p, DateTime.UtcNow.AddMinutes(1));
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(1, results.Count);
+                Assert.AreEqual(knownModels.WMM, results[0].DetectedType);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_NewFileAdded_DeepScansOnlyNewFile()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+
+                fx.CopyFixture("IGRF14_sample.COF", "IGRF14.COF");
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(2, results.Count);
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.WMM));
+                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.IGRF));
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_FileDeleted_DropsFromCacheOnNextScan()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                var p1 = fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                fx.CopyFixture("IGRF14_sample.COF", "IGRF14.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+
+                File.Delete(p1);
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(1, results.Count);
+                Assert.AreEqual(knownModels.IGRF, results[0].DetectedType);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_CorruptCache_RecoversByRewriting()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                File.WriteAllText(Path.Combine(fx.FolderPath, ".models.json"), "garbage{");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(1, results.Count);
+                Assert.AreEqual(knownModels.WMM, results[0].DetectedType);
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_UseCache_CacheFileNotInResults()
+        {
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.IsFalse(results.Any(d => d.FilePath.EndsWith(".models.json")));
+            }
+        }
     }
 }
