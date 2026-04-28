@@ -85,8 +85,23 @@ namespace GeoMagSharp.HDGM
             {
                 if (_disposed)
                     throw new ObjectDisposedException(nameof(LoadLibraryHdgmInvoker));
-                return _delegate(latitude, longitude, depthMeters, decimalYear,
-                    /* usePomme */ 0, /* useDifi */ 0, outData);
+                // The standard (non-ACTIVATERT) NOAA DLL expects 9 numeric inputs +
+                // outData. Pass decimalYear via the dedicated parameter, set
+                // useDecimalYear=1 so the day/month/year scalars are ignored, and
+                // useGeoid=0 to treat depthMeters as a WGS84-ellipsoid offset (the
+                // simplest interpretation for depth values supplied by callers; if
+                // depths are MSL-relative the caller can pre-apply the EGM96 offset).
+                return _delegate(
+                    latitude,
+                    longitude,
+                    depthMeters,
+                    /* day */            0.0,
+                    /* month */          0.0,
+                    /* year */           0.0,
+                    /* decimalYear */    decimalYear,
+                    /* useGeoid */       0,
+                    /* useDecimalYear */ 1,
+                    outData);
             }
         }
 
