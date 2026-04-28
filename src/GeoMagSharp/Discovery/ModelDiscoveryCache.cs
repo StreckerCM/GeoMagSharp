@@ -92,6 +92,10 @@ namespace GeoMagSharp.Discovery
                 // Atomic-rename onto target. On Windows, File.Move with overwrite=true
                 // is atomic at the NTFS layer.
 #if NET48 || NETSTANDARD2_0
+                // NOTE: not atomic on net48/netstandard2.0 (no overwrite-aware Move).
+                // A concurrent reader hitting the brief delete-then-move window observes
+                // a missing cache, which TryLoad treats as a cold start. Failure mode is
+                // a transient empty-cache read, not corruption.
                 if (File.Exists(cacheFilePath)) File.Delete(cacheFilePath);
                 File.Move(tempPath, cacheFilePath);
 #else

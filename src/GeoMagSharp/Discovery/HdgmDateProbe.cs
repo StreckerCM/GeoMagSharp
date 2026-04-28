@@ -8,6 +8,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using GeoMagSharp.HDGM;
 
 namespace GeoMagSharp.Discovery
@@ -79,11 +80,11 @@ namespace GeoMagSharp.Discovery
                     return (KnownStartYear, (double)(maxValidYear + 1));
                 }
             }
-            catch
+            catch (Exception ex) when (!(ex is OutOfMemoryException) && !(ex is ThreadAbortException))
             {
                 // LoadLibraryEx fail (bitness / AV / corrupt), missing symbol, or anything
                 // else from the native side. Fall back to null bounds; runtime sentinel is
-                // the authoritative guard.
+                // the authoritative guard. Fatal exceptions are allowed to propagate.
                 return (null, null);
             }
         }

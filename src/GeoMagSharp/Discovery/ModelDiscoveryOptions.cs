@@ -32,7 +32,11 @@ namespace GeoMagSharp
         /// <summary>Cache filename inside the scanned folder. Default ".models.json".</summary>
         public string CacheFileName { get; set; } = ".models.json";
 
-        /// <summary>Cancellation token. Checked once per file. Default <see cref="CancellationToken.None"/>.</summary>
+        /// <summary>
+        /// Cancellation token. Checked once per file. Default <see cref="CancellationToken.None"/>.
+        /// Cancellation aborts enumeration before the post-walk cache rewrite, so a partial
+        /// scan will not overwrite the existing <c>.models.json</c>.
+        /// </summary>
         public CancellationToken CancellationToken { get; set; }
 
         /// <summary>
