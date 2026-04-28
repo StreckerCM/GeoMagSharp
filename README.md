@@ -22,8 +22,8 @@ Install-Package GeoMagSharp
 ```csharp
 using GeoMagSharp;
 
-// Load a coefficient file
-var geoMag = new GeoMag();
+// Load a coefficient file (GeoMag is IDisposable so HDGM native handles get released)
+using var geoMag = new GeoMag();
 geoMag.LoadModel("WMM2025.COF");
 
 // Configure calculation
@@ -65,8 +65,8 @@ await geoMag.SaveResultsAsync("output.txt", false, cts.Token);
 | Model | Type | Source | Included |
 |-------|------|--------|----------|
 | **WMM** | World Magnetic Model | NOAA | WMM2025.COF, WMM2015.COF |
-| **WMMHR** | WMM High Resolution | NOAA | WMMHR.COF |
-| **IGRF** | International Geomagnetic Reference Field | IAGA | IGRF12.COF |
+| **WMMHR** | WMM High Resolution | NOAA | WMMHR.COF (WMMHR-2025) |
+| **IGRF** | International Geomagnetic Reference Field | IAGA | IGRF14.COF (through 2030), IGRF13.COF (through 2025), IGRF12.COF (through 2020) |
 | **EMM** | Enhanced Magnetic Model | NOAA | No (survey required) |
 | **BGGM** | BGS Global Geomagnetic Model | BGS | No (commercial license) |
 | **HDGM** | High Definition Geomagnetic Model | NOAA | No (user-supplied DLL, Windows-only) |
