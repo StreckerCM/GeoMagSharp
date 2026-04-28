@@ -124,6 +124,18 @@ See [`examples/GeoMagSharp.Example`](examples/GeoMagSharp.Example) for a runnabl
 - **`ModelReader`** - Parses COF/DAT coefficient files into model objects
 - **`Calculator`** - Low-level spherical harmonic calculation engine
 - **`CalculationOptions`** - Configuration for latitude, longitude, date, elevation, etc.
+- **`ModelDiscovery`** - Enumerates loadable model files in a folder (COF, DAT, HDGM .dll)
+
+### Discovering models in a folder
+
+Use `ModelDiscovery.DiscoverModels(folderPath)` to enumerate every loadable model file in a folder without knowing each format's filename rules:
+
+```csharp
+foreach (var d in ModelDiscovery.DiscoverModels("./coefficients"))
+    Console.WriteLine($"{d.DisplayName} ({d.DetectedType}) {d.MinDate}..{d.MaxDate}");
+```
+
+Pass `new ModelDiscoveryOptions { UseCache = true }` to populate a `.models.json` cache in the scanned folder; subsequent scans skip re-inspecting unchanged files. See `ScanMode`, `ModelDiscoveryOptions`, and `ModelDescriptor` IntelliSense for full options.
 
 ### Model Classes
 

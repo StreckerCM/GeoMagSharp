@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GeoMagSharp is a C# library for geomagnetic field calculations using spherical harmonic models. It is a port of GeoMag 7.0 (NOAA) and supports WMM, WMMHR, IGRF, EMM, DGRF, BGGM, and HDGM (Windows-only via NOAA DLL) models for computing magnetic declination, inclination, and field intensity.
+GeoMagSharp is a C# library for geomagnetic field calculations using spherical harmonic models. It is a port of GeoMag 7.0 (NOAA) and supports WMM, WMMHR, IGRF, EMM, DGRF, BGGM, and HDGM (Windows-only via NOAA DLL) models for computing magnetic declination, inclination, and field intensity. It also exposes a library-level model discovery API (`ModelDiscovery.DiscoverModels`) for enumerating loadable model files in a folder, with optional cached metadata for fast app startup.
 
 **Tech Stack:** .NET multi-target library (net48 + netstandard2.0), SDK-style csproj, NuGet package
 
