@@ -33,4 +33,9 @@
     <EmbeddedResource Include="Data\iscwsa-uncertainty.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="GeoMagSharp.Tests" />
+    <InternalsVisibleTo Include="GeoMagSharp.GUI" />
+  </ItemGroup>
+
 </Project>

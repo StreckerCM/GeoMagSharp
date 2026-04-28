@@ -42,3 +42,15 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+
+# HDGM-derived artifacts — never committed (license posture per design 2026-04-26)
+# These rules block accidental commits of NOAA HDGM data files. Documentation
+# (this design / spec) is exempt because it lives under docs/ and references the
+# files only by name, not contents.
+hdgm*.dll
+HDGM*.dll
+HDGM*.exe
+HDGM*.EXE
+HDGM*_TestValues.txt
+HDGM*_Documentation.pdf
+HDGM_license.txt

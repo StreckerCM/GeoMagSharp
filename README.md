@@ -69,8 +69,11 @@ await geoMag.SaveResultsAsync("output.txt", false, cts.Token);
 | **IGRF** | International Geomagnetic Reference Field | IAGA | IGRF12.COF |
 | **EMM** | Enhanced Magnetic Model | NOAA | No (survey required) |
 | **BGGM** | BGS Global Geomagnetic Model | BGS | No (commercial license) |
+| **HDGM** | High Definition Geomagnetic Model | NOAA | No (user-supplied DLL, Windows-only) |
 
 Bundled coefficient files are in the `coefficient/` directory. See `coefficient/NOTICE.md` for attribution and download links for non-bundled models.
+
+**HDGM** is *Windows-only* and requires a user-supplied NOAA DLL. It provides a degree-740 crustal field with per-point uncertainty estimates and a high-resolution survey coverage flag. See [docs/features/hdgm-support/README.md](docs/features/hdgm-support/README.md) for setup instructions.
 
 ### Uncertainty Estimation
 

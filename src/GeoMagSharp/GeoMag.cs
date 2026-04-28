@@ -12,6 +12,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using GeoMagSharp.HDGM;
 
 
 namespace GeoMagSharp
@@ -20,7 +21,7 @@ namespace GeoMagSharp
     /// Provides an interface to magnetic field calculation methods.
     /// Handles model loading, magnetic field computation, and result export.
     /// </summary>
-    public class GeoMag
+    public class GeoMag : IDisposable
     {
         /// <summary>
         /// The results of the most recent magnetic field calculation.
@@ -50,6 +51,12 @@ namespace GeoMagSharp
 
             if (string.IsNullOrEmpty(modelFile))
                 throw new GeoMagExceptionFileNotFound("Error coefficient file name not specified");
+
+            if (ModelPathDetector.IsHdgmPath(modelFile))
+            {
+                _Models = HDGMModelLoader.Load(modelFile);
+                return;
+            }
 
             _Models = ModelReader.Read(modelFile);
 
@@ -84,8 +91,38 @@ namespace GeoMagSharp
             if (string.IsNullOrEmpty(modelFile))
                 throw new GeoMagExceptionFileNotFound("Error coefficient file name not specified");
 
+            if (ModelPathDetector.IsHdgmPath(modelFile))
+            {
+                _Models = HDGMModelLoader.Load(modelFile);
+                return;
+            }
+
             _Models = ModelReader.Read(modelFile, svFile);
 
+        }
+
+        /// <summary>
+        /// Loads HDGM (or another high-resolution model) using a caller-provided native invoker.
+        /// Advanced extension point: third-party drivers, in-memory mocks for testing,
+        /// or alternative DLL loaders that bypass the file-path heuristic of <see cref="LoadModel(string)"/>.
+        /// </summary>
+        /// <param name="invoker">A non-null INativeHdgmInvoker. The GeoMag instance takes
+        /// ownership; disposing the GeoMag will dispose the invoker.</param>
+        /// <param name="modelName">Optional display name for the model (defaults to "HDGM-CUSTOM").</param>
+        /// <exception cref="ArgumentNullException">If <paramref name="invoker"/> is null.</exception>
+        public void LoadModel(INativeHdgmInvoker invoker, string modelName = "HDGM-CUSTOM")
+        {
+            if (invoker == null) throw new ArgumentNullException(nameof(invoker));
+
+            _Models = null;
+            _Models = new MagneticModelSet
+            {
+                Type = knownModels.HDGM,
+                Name = string.IsNullOrWhiteSpace(modelName) ? "HDGM-CUSTOM" : modelName,
+                MinDate = 1900.0,
+                MaxDate = 9999.0,
+                NativeInvoker = invoker
+            };
         }
 
         /// <summary>
@@ -100,9 +137,9 @@ namespace GeoMagSharp
             _CalculationOptions = null;
             ResultsOfCalculation = null;
 
-            if (_Models == null || _Models.NumberOfModels.Equals(0))
+            if (_Models == null || (_Models.NativeInvoker == null && _Models.NumberOfModels.Equals(0)))
                 throw new GeoMagExceptionModelNotLoaded("Error: No models avaliable for calculation");
-                    
+
             if (!_Models.IsDateInRange(inCalculationOptions.StartDate))
             {
                 throw new GeoMagExceptionOutOfRange(string.Format("Error: the date {0} is out of range for this model{1}The valid date range for the is {2} to {3}",
@@ -135,20 +172,29 @@ namespace GeoMagSharp
 
             while (dateIdx <= timespan.Days)
             {
-
-                var internalSH = new Coefficients();
-
-                var externalSH = new Coefficients();
-
                 DateTime intervalDate = _CalculationOptions.StartDate.AddDays(dateIdx);
 
-                _Models.GetIntExt(intervalDate.ToDecimal(), out internalSH, out externalSH);
-
-                var magCalcDate = Calculator.SpotCalculation(_CalculationOptions, intervalDate, _Models, internalSH, externalSH, _Models.EarthRadius);
+                MagneticCalculations magCalcDate;
+                if (_Models.NativeInvoker != null)
+                {
+                    magCalcDate = HDGMCalculationAdapter.Calculate(_CalculationOptions, intervalDate, _Models.NativeInvoker);
+                }
+                else
+                {
+                    var internalSH = new Coefficients();
+                    var externalSH = new Coefficients();
+                    _Models.GetIntExt(intervalDate.ToDecimal(), out internalSH, out externalSH);
+                    magCalcDate = Calculator.SpotCalculation(_CalculationOptions, intervalDate, _Models, internalSH, externalSH, _Models.EarthRadius);
+                }
 
                 if (magCalcDate != null)
                 {
-                    magCalcDate.Uncertainty = uncertainty;
+                    // For HDGM, the adapter already populated per-point Uncertainty.
+                    // For other models, fall back to the global ISCWSA uncertainty.
+                    if (magCalcDate.Uncertainty == null)
+                    {
+                        magCalcDate.Uncertainty = uncertainty;
+                    }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }
@@ -292,7 +338,7 @@ namespace GeoMagSharp
             _CalculationOptions = null;
             ResultsOfCalculation = null;
 
-            if (_Models == null || _Models.NumberOfModels.Equals(0))
+            if (_Models == null || (_Models.NativeInvoker == null && _Models.NumberOfModels.Equals(0)))
                 throw new GeoMagExceptionModelNotLoaded("Error: No models avaliable for calculation");
 
             if (!_Models.IsDateInRange(inCalculationOptions.StartDate))
@@ -350,21 +396,27 @@ namespace GeoMagSharp
                     StatusMessage = string.Format("Calculating for {0}...", intervalDate.ToString("yyyy-MM-dd"))
                 });
 
-                var internalSH = new Coefficients();
-                var externalSH = new Coefficients();
-
-                _Models.GetIntExt(intervalDate.ToDecimal(), out internalSH, out externalSH);
-
                 var models = _Models;
                 var calcOptions = _CalculationOptions;
 
-                var magCalcDate = await Task.Run(() =>
-                    Calculator.SpotCalculation(calcOptions, intervalDate, models, internalSH, externalSH, models.EarthRadius),
-                    cancellationToken).ConfigureAwait(false);
+                MagneticCalculations magCalcDate = await Task.Run(() =>
+                {
+                    if (models.NativeInvoker != null)
+                    {
+                        return HDGMCalculationAdapter.Calculate(calcOptions, intervalDate, models.NativeInvoker);
+                    }
+                    var internalSH = new Coefficients();
+                    var externalSH = new Coefficients();
+                    models.GetIntExt(intervalDate.ToDecimal(), out internalSH, out externalSH);
+                    return Calculator.SpotCalculation(calcOptions, intervalDate, models, internalSH, externalSH, models.EarthRadius);
+                }, cancellationToken).ConfigureAwait(false);
 
                 if (magCalcDate != null)
                 {
-                    magCalcDate.Uncertainty = uncertainty;
+                    if (magCalcDate.Uncertainty == null)
+                    {
+                        magCalcDate.Uncertainty = uncertainty;
+                    }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
                 }
@@ -485,6 +537,20 @@ namespace GeoMagSharp
 
                 File.WriteAllText(fileName, content);
             }, cancellationToken).ConfigureAwait(false);
+        }
+
+        private bool _disposed;
+
+        /// <summary>
+        /// Disposes the underlying model set, releasing any native HDGM DLL handle.
+        /// No-op for GeoMag instances loaded with non-HDGM models.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _Models?.Dispose();
+            _Models = null;
         }
 
         /// <summary>

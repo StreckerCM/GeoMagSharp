@@ -5,6 +5,7 @@
  * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
 
+using GeoMagSharp.HDGM;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace GeoMagSharp
     /// Magnetic Model Set Object - contains multiple models (main, secular variation, external)
     /// for a specific magnetic field model like WMM, IGRF, etc.
     /// </summary>
-    public class MagneticModelSet
+    public class MagneticModelSet : IDisposable
     {
         #region Constructors
 
@@ -31,6 +32,15 @@ namespace GeoMagSharp
         /// <summary>
         /// Initializes a new instance by copying values from another <see cref="MagneticModelSet"/>.
         /// </summary>
+        /// <remarks>
+        /// HDGM model sets carry a native DLL handle (NativeInvoker) which is NOT copied
+        /// by this constructor — the original retains ownership. The resulting copy will
+        /// behave as a non-HDGM model set and calculations on it will throw
+        /// <see cref="GeoMagExceptionModelNotLoaded"/>. To use HDGM with multiple GeoMag
+        /// instances, load the DLL separately into each (via
+        /// <see cref="GeoMag.LoadModel(string)"/> or
+        /// <see cref="GeoMag.LoadModel(INativeHdgmInvoker, string)"/>).
+        /// </remarks>
         /// <param name="other">The source model set to copy.</param>
         public MagneticModelSet(MagneticModelSet other)
         {
@@ -435,6 +445,27 @@ namespace GeoMagSharp
 
                 return Models.Count;
             }
+        }
+
+        /// <summary>
+        /// Native HDGM invoker handle. Null for non-HDGM model sets. Internal — HDGM
+        /// detection in client code should rely on Type == knownModels.HDGM rather
+        /// than reaching for this field.
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        internal INativeHdgmInvoker NativeInvoker { get; set; }
+
+        private bool _disposed;
+
+        /// <summary>
+        /// Releases the native HDGM DLL handle if one is held. No-op for non-HDGM model sets.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            NativeInvoker?.Dispose();
+            NativeInvoker = null;
         }
 
         #endregion

@@ -40,6 +40,7 @@ namespace GeoMagSharp
 
                 case knownModels.WMMHR:
                 case knownModels.EMM:
+                case knownModels.HDGM:
                     return GeomagneticModelCategory.HighResolution;
 
                 default:
