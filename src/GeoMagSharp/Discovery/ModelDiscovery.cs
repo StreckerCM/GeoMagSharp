@@ -47,25 +47,75 @@ namespace GeoMagSharp
                 ? SearchOption.AllDirectories
                 : SearchOption.TopDirectoryOnly;
 
-            string cacheFileFullPath = options.UseCache
-                ? Path.GetFullPath(Path.Combine(folderPath, options.CacheFileName ?? ".models.json"))
+            string cacheFilePath = options.UseCache
+                ? Path.Combine(folderPath, options.CacheFileName ?? ".models.json")
                 : null;
+            string cacheFileFullPath = cacheFilePath != null ? Path.GetFullPath(cacheFilePath) : null;
+
+            // Load existing cache (empty if missing/corrupt/wrong-version)
+            Dictionary<string, ModelDiscoveryCacheEntry> cachedByRelPath =
+                new Dictionary<string, ModelDiscoveryCacheEntry>(StringComparer.OrdinalIgnoreCase);
+            if (cacheFilePath != null)
+            {
+                foreach (var entry in ModelDiscoveryCache.TryLoad(cacheFilePath, options.OnError))
+                {
+                    if (!string.IsNullOrEmpty(entry.RelativePath))
+                        cachedByRelPath[entry.RelativePath] = entry;
+                }
+            }
+
+            // We collect entries to write back so the cache reflects the live folder.
+            var liveEntries = options.UseCache ? new List<ModelDiscoveryCacheEntry>() : null;
 
             foreach (string filePath in Directory.EnumerateFiles(folderPath, "*.*", searchOption))
             {
                 options.CancellationToken.ThrowIfCancellationRequested();
 
-                // Skip the cache file itself
                 if (cacheFileFullPath != null &&
                     string.Equals(Path.GetFullPath(filePath), cacheFileFullPath, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                ModelDescriptor descriptor;
+                ModelDescriptor descriptor = null;
+                ModelDiscoveryCacheEntry cacheEntryToWrite = null;
+
                 try
                 {
-                    descriptor = ClassifyFile(filePath, options);
+                    string relPath = MakeRelativePath(folderPath, filePath);
+                    var fileInfo = new FileInfo(filePath);
+
+                    ModelDiscoveryCacheEntry cached;
+                    bool cacheHit = options.UseCache
+                        && cachedByRelPath.TryGetValue(relPath, out cached)
+                        && cached.FileSize == fileInfo.Length
+                        && AreUtcTimestampsEqual(cached.FileLastWriteUtc, fileInfo.LastWriteTimeUtc);
+
+                    if (cacheHit)
+                    {
+                        var c = cachedByRelPath[relPath];
+                        descriptor = new ModelDescriptor(filePath, c.DetectedType, c.DisplayName,
+                            c.MinDate, c.MaxDate, c.Description);
+                        cacheEntryToWrite = c;
+                    }
+                    else
+                    {
+                        descriptor = ClassifyFile(filePath, options);
+                        if (descriptor != null && options.UseCache)
+                        {
+                            cacheEntryToWrite = new ModelDiscoveryCacheEntry
+                            {
+                                RelativePath = relPath,
+                                FileSize = fileInfo.Length,
+                                FileLastWriteUtc = DateTime.SpecifyKind(fileInfo.LastWriteTimeUtc, DateTimeKind.Utc),
+                                DetectedType = descriptor.DetectedType,
+                                DisplayName = descriptor.DisplayName,
+                                MinDate = descriptor.MinDate,
+                                MaxDate = descriptor.MaxDate,
+                                Description = descriptor.Description
+                            };
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -73,8 +123,39 @@ namespace GeoMagSharp
                     continue;
                 }
 
-                if (descriptor != null) yield return descriptor;
+                if (descriptor != null)
+                {
+                    if (liveEntries != null && cacheEntryToWrite != null)
+                        liveEntries.Add(cacheEntryToWrite);
+                    yield return descriptor;
+                }
             }
+
+            if (cacheFilePath != null && liveEntries != null)
+            {
+                ModelDiscoveryCache.Save(cacheFilePath, liveEntries, options.OnError);
+            }
+        }
+
+        private static string MakeRelativePath(string folderPath, string filePath)
+        {
+            string folderFull = Path.GetFullPath(folderPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string fileFull = Path.GetFullPath(filePath);
+            if (fileFull.StartsWith(folderFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                return fileFull.Substring(folderFull.Length + 1);
+            return Path.GetFileName(filePath);
+        }
+
+        private static bool AreUtcTimestampsEqual(DateTime a, DateTime b)
+        {
+            // Truncate to nearest second to avoid sub-second precision differences across filesystems.
+            return DateTimeToUnixSeconds(a) == DateTimeToUnixSeconds(b);
+        }
+
+        private static long DateTimeToUnixSeconds(DateTime dt)
+        {
+            var utc = dt.Kind == DateTimeKind.Utc ? dt : dt.ToUniversalTime();
+            return (utc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks / TimeSpan.TicksPerSecond;
         }
 
         private static ModelDescriptor ClassifyFile(string filePath, ModelDiscoveryOptions options)
