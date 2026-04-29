@@ -123,6 +123,10 @@ namespace GeoMagSharp_UnitTests.Discovery
         [TestMethod]
         public void DiscoverModels_FullMode_MixedFolder_HandlesAllCases()
         {
+            // Full mode is strict: classifiable files appear in results, unclassifiable
+            // ones (corrupt headers, empty .cof/.dat, non-model extensions) do not.
+            // See #27 - prior versions returned NONE-typed descriptors for unclassifiable
+            // .cof/.dat files, which leaked into consumer model lists as ghost entries.
             using (var fx = new TestFolderFixture())
             {
                 fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
@@ -131,10 +135,32 @@ namespace GeoMagSharp_UnitTests.Discovery
                 fx.WriteFile("notes.txt", "ignored");
 
                 var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
-                Assert.AreEqual(3, results.Count);
+                Assert.AreEqual(2, results.Count);
                 Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.WMM));
                 Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.IGRF));
-                Assert.IsTrue(results.Any(d => d.DetectedType == knownModels.NONE));
+                Assert.IsFalse(results.Any(d => d.DetectedType == knownModels.NONE),
+                    "Full-mode discovery must not yield NONE-typed descriptors");
+            }
+        }
+
+        [TestMethod]
+        public void DiscoverModels_FullMode_EmptyCofExcluded()
+        {
+            // Regression for #27: a 0-byte .cof file in the scanned folder must not
+            // appear in DiscoverModels output. Previously yielded a descriptor with
+            // DetectedType=NONE and DisplayName="bad", which downstream consumers
+            // (e.g. WinForms combobox bindings) couldn't easily distinguish from valid
+            // models, allowing unloadable entries to be presented as user-selectable.
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("WMM2025_sample.COF", "WMM.COF");
+                fx.CopyFixture("empty.COF", "bad.cof");
+
+                var results = ModelDiscovery.DiscoverModels(fx.FolderPath).ToList();
+                Assert.AreEqual(1, results.Count, "only the WMM file should be discovered");
+                Assert.IsFalse(results.Any(d => Path.GetFileName(d.FilePath)
+                    .Equals("bad.cof", StringComparison.OrdinalIgnoreCase)),
+                    "empty/unclassifiable .cof file must not appear in results");
             }
         }
 

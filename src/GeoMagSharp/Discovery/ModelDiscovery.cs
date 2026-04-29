@@ -168,10 +168,21 @@ namespace GeoMagSharp
             {
                 if (options.Mode == ScanMode.Quick)
                 {
+                    // Quick mode is intentionally permissive: extension-only candidate
+                    // listing without header parse. Caller can refine via DescribeFile.
                     return new ModelDescriptor(filePath, knownModels.NONE,
                         Path.GetFileNameWithoutExtension(filePath), null, null);
                 }
-                return ModelHeaderInspector.Inspect(filePath);
+                var inspected = ModelHeaderInspector.Inspect(filePath);
+                // Full mode is strict: if header peek could not classify the file
+                // (empty, garbled, or non-model content with a .cof/.dat extension),
+                // exclude it from enumeration so consumers don't see unloadable
+                // entries in their model lists.
+                if (inspected != null && inspected.DetectedType == knownModels.NONE)
+                {
+                    return null;
+                }
+                return inspected;
             }
 
             if (extUpper == ".DLL" && ModelPathDetector.IsHdgmPath(filePath))

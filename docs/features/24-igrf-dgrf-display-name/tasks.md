@@ -1,6 +1,6 @@
 # Feature: Fix ModelHeaderInspector for multi-epoch IGRF/DGRF .COF files
 
-Issue: #24 (multi-epoch DisplayName + dates) + #26 (cache invalidation on classifier change)
+Issue: #24 (multi-epoch DisplayName + dates) + #26 (cache invalidation on classifier change) + #27 (filter NONE-typed descriptors from DiscoverModels)
 Branch: feature/24-igrf-dgrf-display-name
 Version bump: 1.7.0 → 1.7.1 (patch)
 
@@ -45,6 +45,16 @@ Discovered while smoke-testing #24's fix in [GeoMagSharpGUI #58](https://github.
 - [x] Bump `ModelDiscoveryCache.CurrentSchemaVersion` 1 → 2 (with version-history comment block explaining the trigger)
 - [x] Add `Load_LegacyV1Cache_DiscardedAfterSchemaBumpToV2` test that writes a v1 cache with realistic stale entries and asserts `TryLoad` returns empty
 - [x] Existing `Load_WrongSchemaVersion_ReturnsEmptyList` test still covers the strict-equality check generally
+
+### NONE-typed descriptor filter in Full-mode DiscoverModels (#27)
+
+Discovered while smoke-testing PR #58: a 0-byte `bad.cof` placed in the GUI's `coefficient/` folder appeared in the dropdown as a selectable model. Root cause: `ModelHeaderInspector.Inspect` always returns a non-null descriptor (with `DetectedType = NONE` for unparseable files) — appropriate for the single-file `DescribeFile` API but wrong for folder enumeration where the question is "what models are loadable here?"
+
+- [x] In `ClassifyFile` Full-mode branch, treat `Inspect` returning `NONE` as a classification failure → return null (file excluded from enumeration)
+- [x] Quick mode unchanged — intentionally permissive (extension-only candidate listing)
+- [x] `DescribeFile` unchanged — single-file callers still get NONE descriptors as informative output
+- [x] Update `DiscoverModels_FullMode_MixedFolder_HandlesAllCases` to assert NONE descriptors are absent (was documenting the bug)
+- [x] Add `DiscoverModels_FullMode_EmptyCofExcluded` regression test using existing `empty.COF` fixture
 
 ## Completion Criteria
 
