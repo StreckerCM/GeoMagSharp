@@ -94,5 +94,46 @@ namespace GeoMagSharp_UnitTests.Discovery
             var d = ModelHeaderInspector.Inspect(path);
             Assert.AreEqual(path, d.FilePath);
         }
+
+        [TestMethod]
+        public void Inspect_Igrf14MultiEpoch_DisplayNameIsLatestEpochLabel()
+        {
+            var d = ModelHeaderInspector.Inspect(Fixture("IGRF14_multiepoch.COF"));
+            Assert.AreEqual(knownModels.IGRF, d.DetectedType);
+            Assert.AreEqual("IGRF2025", d.DisplayName);
+            Assert.AreEqual(1900.0, d.MinDate);
+            Assert.AreEqual(2030.0, d.MaxDate);
+        }
+
+        [TestMethod]
+        public void Inspect_Igrf13MultiEpoch_DisplayNameIsLatestEpochLabel()
+        {
+            var d = ModelHeaderInspector.Inspect(Fixture("IGRF13_multiepoch.COF"));
+            Assert.AreEqual(knownModels.IGRF, d.DetectedType);
+            Assert.AreEqual("IGRF2020", d.DisplayName);
+            Assert.AreEqual(1900.0, d.MinDate);
+            Assert.AreEqual(2025.0, d.MaxDate);
+        }
+
+        [TestMethod]
+        public void Inspect_Igrf12MultiEpoch_DisplayNameIsLatestEpochLabel()
+        {
+            var d = ModelHeaderInspector.Inspect(Fixture("IGRF12_multiepoch.COF"));
+            Assert.AreEqual(knownModels.IGRF, d.DetectedType);
+            Assert.AreEqual("IGRF2015", d.DisplayName);
+            Assert.AreEqual(1900.0, d.MinDate);
+            Assert.AreEqual(2020.0, d.MaxDate);
+        }
+
+        [TestMethod]
+        public void Inspect_WmmCof_NotAffectedByMultiEpochScan()
+        {
+            // Regression: ensure single-epoch model files use the existing fast-path
+            // (no multi-epoch scan, MaxDate = MinDate + 5).
+            var d = ModelHeaderInspector.Inspect(Fixture("WMM2025_sample.COF"));
+            Assert.AreEqual(knownModels.WMM, d.DetectedType);
+            Assert.AreEqual(2025.0, d.MinDate);
+            Assert.AreEqual(2030.0, d.MaxDate);
+        }
     }
 }
