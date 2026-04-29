@@ -99,6 +99,24 @@ namespace GeoMagSharp_UnitTests.Discovery
         }
 
         [TestMethod]
+        public void Load_LegacyV1Cache_DiscardedAfterSchemaBumpToV2()
+        {
+            // Cache shape as written by GeoMagSharp 1.7.0 and earlier may contain
+            // stale classifier output (e.g. DisplayName="IGRF00" for IGRF14.COF
+            // before the multi-epoch fix in #24). After the v2 schema bump in #26,
+            // TryLoad must discard v1 caches verbatim - even if file mtime/size
+            // for individual entries still matches - so the new classifier runs.
+            string v1Json = "{\"schemaVersion\":1,\"entries\":[" +
+                "{\"RelativePath\":\"IGRF14.COF\",\"FileSize\":157950," +
+                "\"FileLastWriteUtc\":\"2026-04-26T04:47:48Z\"," +
+                "\"DetectedType\":3,\"DisplayName\":\"IGRF00\"," +
+                "\"MinDate\":1900.0,\"MaxDate\":1905.0,\"Description\":\"\"}]}";
+            File.WriteAllText(_cacheFile, v1Json);
+            var loaded = ModelDiscoveryCache.TryLoad(_cacheFile, null);
+            Assert.AreEqual(0, loaded.Count, "v1 caches must be discarded after schema bump to v2");
+        }
+
+        [TestMethod]
         public void Load_EmptyJsonObject_ReturnsEmptyList()
         {
             File.WriteAllText(_cacheFile, "{}");

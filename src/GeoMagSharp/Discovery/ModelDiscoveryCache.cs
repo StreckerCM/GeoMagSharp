@@ -20,7 +20,18 @@ namespace GeoMagSharp.Discovery
     /// </summary>
     internal static class ModelDiscoveryCache
     {
-        private const int CurrentSchemaVersion = 1;
+        // Bump this constant whenever ModelHeaderInspector or ClassifyFile changes
+        // in a way that affects ModelDescriptor values (DisplayName, MinDate, MaxDate,
+        // DetectedType). TryLoad rejects any cache whose schemaVersion does not match
+        // CurrentSchemaVersion exactly, forcing a fresh classification pass and
+        // preventing stale entries from leaking through library upgrades.
+        //
+        // Version history:
+        //   1 - initial (1.7.0)
+        //   2 - 1.7.1: invalidate v1 caches that may contain buggy IGRF/DGRF
+        //       DisplayName ("IGRF00") and MaxDate (1905) values from
+        //       single-line ModelHeaderInspector. See issues #24, #26.
+        private const int CurrentSchemaVersion = 2;
 
         /// <summary>
         /// Loads the cache file. Returns an empty list if the file is missing,

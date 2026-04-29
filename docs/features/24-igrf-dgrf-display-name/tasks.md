@@ -1,6 +1,6 @@
 # Feature: Fix ModelHeaderInspector for multi-epoch IGRF/DGRF .COF files
 
-Issue: #24
+Issue: #24 (multi-epoch DisplayName + dates) + #26 (cache invalidation on classifier change)
 Branch: feature/24-igrf-dgrf-display-name
 Version bump: 1.7.0 → 1.7.1 (patch)
 
@@ -37,6 +37,14 @@ Single-epoch models (WMM, EMM, BGGM) keep their existing fast-path: read first l
   - WMM2025.COF → existing behavior preserved (DisplayName "WMM-2025")
 - [ ] Build + run all existing tests (no regressions)
 - [ ] Repack `GeoMagSharp.1.7.1.nupkg` to artifacts/
+
+### Cache invalidation (#26)
+
+Discovered while smoke-testing #24's fix in [GeoMagSharpGUI #58](https://github.com/StreckerCM/GeoMagSharpGUI/pull/58): a v1 `.models.json` cache written by 1.7.0 contains buggy `"IGRF00"` entries; on upgrade to 1.7.1, the cache hit logic (path + size + mtime) reuses the stale entries verbatim, hiding the fix. Bundling the cache invalidation into the same release means consumers see the corrected classifier output immediately on upgrade rather than after a manual `.models.json` delete.
+
+- [x] Bump `ModelDiscoveryCache.CurrentSchemaVersion` 1 → 2 (with version-history comment block explaining the trigger)
+- [x] Add `Load_LegacyV1Cache_DiscardedAfterSchemaBumpToV2` test that writes a v1 cache with realistic stale entries and asserts `TryLoad` returns empty
+- [x] Existing `Load_WrongSchemaVersion_ReturnsEmptyList` test still covers the strict-equality check generally
 
 ## Completion Criteria
 
