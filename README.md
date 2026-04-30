@@ -128,17 +128,26 @@ See [`examples/GeoMagSharp.Example`](examples/GeoMagSharp.Example) for a runnabl
 
 ### Discovering models in a folder
 
-Use `ModelDiscovery.DiscoverModels(folderPath)` to enumerate every loadable model file in a folder without knowing each format's filename rules:
+`ModelDiscovery.DiscoverModels(folderPath)` enumerates every loadable model file (`.cof`, `.dat`, HDGM `.dll`) in a folder without knowing each format's filename rules:
 
 ```csharp
 foreach (var d in ModelDiscovery.DiscoverModels("./coefficients"))
     Console.WriteLine($"{d.DisplayName} ({d.DetectedType}) {d.MinDate}..{d.MaxDate}");
+
+// e.g.   WMM-2025 (WMM)  2025..2030
+//        IGRF2025 (IGRF) 1900..2030    // latest epoch label for multi-epoch IGRF files
+//        HDGM2025 (HDGM) 2000..2030
 ```
 
-Pass `new ModelDiscoveryOptions { UseCache = true }` to populate a `.models.json` cache in the scanned folder; subsequent scans skip re-inspecting unchanged files. See `ScanMode`, `ModelDiscoveryOptions`, and `ModelDescriptor` IntelliSense for full options.
+For multi-epoch IGRF/DGRF `.COF` files, `DisplayName` reflects the latest epoch (e.g. `"IGRF2025"` for IGRF14.COF), with `MinDate`/`MaxDate` covering the full validity range across all contained epochs. Single-epoch models (WMM, EMM, BGGM) report their header-stated year and a 5-year MaxDate.
+
+Pass `new ModelDiscoveryOptions { UseCache = true }` to populate a `.models.json` cache for fast subsequent startups. The cache is schema-versioned and auto-invalidates when classifier behavior changes between library versions.
+
+`ModelDiscovery.DescribeFile(path)` performs the same inspection on a single file. See `ScanMode`, `ModelDiscoveryOptions`, and `ModelDescriptor` IntelliSense for full options.
 
 ### Model Classes
 
+- **`ModelDescriptor`** - Read-only snapshot returned by `ModelDiscovery` (file path, detected type, display name, validity range)
 - **`MagneticModelSet`** - A set of magnetic models (main field + secular variation)
 - **`MagneticModelCollection`** - Manages multiple model sets with JSON serialization
 - **`MagneticCalculations`** - Calculation results (declination, inclination, field components)

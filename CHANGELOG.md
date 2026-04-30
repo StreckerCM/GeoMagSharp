@@ -1,5 +1,45 @@
 # Changelog
 
+## v1.7.1 (2026-04-29)
+
+### Bug Fixes
+- **Multi-epoch IGRF/DGRF DisplayName + dates** (#24): `ModelHeaderInspector` now scans all epoch headers in IGRF/DGRF .COF files and uses the latest epoch label as `DisplayName` (e.g. `"IGRF2025"` for IGRF14.COF) with the file's overall validity range. Previously returned `"IGRF00"` and 1900-1905 for every IGRF generation.
+- **Stale cache invalidation** (#26): `.models.json` schema bumped 1 → 2; v1 caches written by 1.7.0 are auto-discarded so consumers see corrected classifier output immediately on upgrade.
+- **Filter unclassifiable files** (#27): `ModelDiscovery.DiscoverModels` (Full mode) no longer yields descriptors for empty .cof/.dat or garbled-header files. Quick mode and `DescribeFile` unchanged.
+
+## v1.7.0 (2026-04-28)
+
+### Features
+- New **`ModelDiscovery`** API for folder-based model enumeration (#21):
+  - `DiscoverModels(folderPath)` — enumerates all loadable model files (`.cof`, `.dat`, HDGM `.dll`)
+  - `DescribeFile(path)` — single-file deep inspection
+  - `ScanMode` enum: `Quick` (extension-only) or `Full` (header peek + HDGM date probe)
+  - `.models.json` cache for fast subsequent startups
+  - `ModelDiscoveryOptions` for recursion, cancellation, error callbacks
+  - `ModelDescriptor` immutable record returned from discovery APIs
+
+### Documentation
+- README accuracy fixes for `IDisposable` semantics and bundled coefficient files (#23)
+
+## v1.6.0 (2026-04-28)
+
+### Features
+- **HDGM (High Definition Geomagnetic Model)** support via NOAA-supplied native DLL (#19): degree-740 crustal field with per-point sigma uncertainty and a high-resolution survey coverage flag. Windows-only; requires user-supplied DLL. See [docs/features/hdgm-support/README.md](docs/features/hdgm-support/README.md) for setup.
+- **Depth-adjusted field values** per SPE-128217-MS (#3): dipole depth correction with depth-dependent uncertainty.
+- **IGRF cross-validation** tests using BGS IGRF-14 Fortran reference (#12).
+
+### API
+- `GeoMag` now implements `IDisposable` to release HDGM native handles
+- `MagneticModelSet` now implements `IDisposable`
+- `GeomagneticUncertainty` adds per-point sigma and coverage fields (populated for HDGM)
+- `knownModels.HDGM` enum value
+
+## v1.5.0 (2026-03-11)
+
+### Features
+- **ISCWSA-based geomagnetic uncertainty estimation** (#2): per-result `Uncertainty` populated automatically based on the loaded model type, with `ScaleTo()` for sigma multiplication and `ModelCategoryOverride` on `CalculationOptions` for in-field referencing or commercial models.
+- **WMM2025 precision validation tests** (#4) against NOAA official reference values.
+
 ## v1.4.0 (2026-02-11)
 
 First standalone NuGet release of GeoMagSharp, extracted from [GeoMagSharpGUI](https://github.com/StreckerCM/GeoMagSharpGUI).
