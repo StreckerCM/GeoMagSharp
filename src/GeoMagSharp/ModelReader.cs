@@ -12,6 +12,7 @@ using System.Linq;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using GeoMagSharp.HDGM;
 
 namespace GeoMagSharp
 {
@@ -33,6 +34,17 @@ namespace GeoMagSharp
         {
             if (string.IsNullOrWhiteSpace(modelFile))
                 throw new ArgumentNullException(nameof(modelFile), "Model file path cannot be null or empty");
+
+            // HDGM auto-detection: a .dll whose filename contains "hdgm" routes to
+            // HDGMModelLoader, which calls LoadLibraryEx and exposes the model via
+            // INativeHdgmInvoker. This mirrors the detection in GeoMag.LoadModel(string)
+            // so consumers using the lower-level ModelReader.Read pattern (e.g.
+            // existing GUIs that build a MagneticModelSet then add it to a
+            // collection) also get HDGM support without changing their call sites.
+            if (ModelPathDetector.IsHdgmPath(modelFile))
+            {
+                return HDGMModelLoader.Load(modelFile);
+            }
 
             if (!File.Exists(modelFile))
                 throw new GeoMagExceptionFileNotFound(string.Format("Error: The file '{0}' was not found",
@@ -66,6 +78,12 @@ namespace GeoMagSharp
         {
             if (string.IsNullOrWhiteSpace(modelFile))
                 throw new ArgumentNullException(nameof(modelFile), "Model file path cannot be null or empty");
+
+            // HDGM auto-detection (svFile is irrelevant for HDGM — DLL is self-contained).
+            if (ModelPathDetector.IsHdgmPath(modelFile))
+            {
+                return HDGMModelLoader.Load(modelFile);
+            }
 
             if (!File.Exists(modelFile))
                 throw new GeoMagExceptionFileNotFound(string.Format("Error: The file '{0}' was not found",
@@ -119,11 +137,31 @@ namespace GeoMagSharp
             if (string.IsNullOrWhiteSpace(modelFile))
                 throw new ArgumentNullException(nameof(modelFile), "Model file path cannot be null or empty");
 
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // HDGM auto-detection: synchronous DLL load (LoadLibraryEx is fast); no
+            // benefit from Task.Run wrapping for the load itself.
+            if (ModelPathDetector.IsHdgmPath(modelFile))
+            {
+                progress?.Report(new CalculationProgressInfo
+                {
+                    CurrentStep = 1,
+                    TotalSteps = 2,
+                    StatusMessage = "Loading HDGM DLL..."
+                });
+                var hdgmSet = HDGMModelLoader.Load(modelFile);
+                progress?.Report(new CalculationProgressInfo
+                {
+                    CurrentStep = 2,
+                    TotalSteps = 2,
+                    StatusMessage = "HDGM DLL loaded successfully"
+                });
+                return hdgmSet;
+            }
+
             if (!File.Exists(modelFile))
                 throw new GeoMagExceptionFileNotFound(string.Format("Error: The file '{0}' was not found",
                     modelFile));
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             if (IsFileLocked(modelFile))
                 throw new GeoMagExceptionOpenError(string.Format("Error: The file '{0}' is locked by another user or application",

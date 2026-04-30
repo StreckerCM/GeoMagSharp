@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GeoMagSharp is a C# library for geomagnetic field calculations using spherical harmonic models. It is a port of GeoMag 7.0 (NOAA) and supports WMM, WMMHR, IGRF, EMM, and BGGM models for computing magnetic declination, inclination, and field intensity.
+GeoMagSharp is a C# library for geomagnetic field calculations using spherical harmonic models. It is a port of GeoMag 7.0 (NOAA) and supports WMM, WMMHR, IGRF, EMM, DGRF, BGGM, and HDGM (Windows-only via NOAA DLL) models for computing magnetic declination, inclination, and field intensity. It also exposes a library-level model discovery API (`ModelDiscovery.DiscoverModels`) for enumerating loadable model files in a folder, with optional cached metadata for fast app startup.
 
 **Tech Stack:** .NET multi-target library (net48 + netstandard2.0), SDK-style csproj, NuGet package
 
@@ -67,6 +67,7 @@ feature/* ─────── Feature development work
 - **After every release, the version number MUST be incremented.** If v1.4.0 is released, ALL subsequent builds must have a higher version (e.g., v1.5.0 or v1.4.1). Never reuse a released version number.
 - **Bump version on the first feature branch after a release.** Check the current `VersionPrefix` and increment it before any code changes.
 - **Use semantic versioning:** MAJOR = breaking API changes, MINOR = new features (backward compatible), PATCH = bug fixes.
+- **Clean up preview releases after a stable release.** Unlist or delete previous preview versions from NuGet once the stable version is published.
 
 ### Branch Protection Rules — NEVER VIOLATE
 
@@ -121,6 +122,7 @@ feature/* ─────── Feature development work
 - **DGRF** (Definitive Geomagnetic Reference Field)
 - **EMM** (Enhanced Magnetic Model)
 - **BGGM** (BGS Global Geomagnetic Model)
+- **HDGM** (High Definition Geomagnetic Model — Windows-only via user-supplied NOAA DLL)
 
 ## Development Workflow
 

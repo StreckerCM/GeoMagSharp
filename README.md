@@ -22,8 +22,8 @@ Install-Package GeoMagSharp
 ```csharp
 using GeoMagSharp;
 
-// Load a coefficient file
-var geoMag = new GeoMag();
+// Load a coefficient file (GeoMag is IDisposable so HDGM native handles get released)
+using var geoMag = new GeoMag();
 geoMag.LoadModel("WMM2025.COF");
 
 // Configure calculation
@@ -65,12 +65,15 @@ await geoMag.SaveResultsAsync("output.txt", false, cts.Token);
 | Model | Type | Source | Included |
 |-------|------|--------|----------|
 | **WMM** | World Magnetic Model | NOAA | WMM2025.COF, WMM2015.COF |
-| **WMMHR** | WMM High Resolution | NOAA | WMMHR.COF |
-| **IGRF** | International Geomagnetic Reference Field | IAGA | IGRF12.COF |
+| **WMMHR** | WMM High Resolution | NOAA | WMMHR.COF (WMMHR-2025) |
+| **IGRF** | International Geomagnetic Reference Field | IAGA | IGRF14.COF (through 2030), IGRF13.COF (through 2025), IGRF12.COF (through 2020) |
 | **EMM** | Enhanced Magnetic Model | NOAA | No (survey required) |
 | **BGGM** | BGS Global Geomagnetic Model | BGS | No (commercial license) |
+| **HDGM** | High Definition Geomagnetic Model | NOAA | No (user-supplied DLL, Windows-only) |
 
 Bundled coefficient files are in the `coefficient/` directory. See `coefficient/NOTICE.md` for attribution and download links for non-bundled models.
+
+**HDGM** is *Windows-only* and requires a user-supplied NOAA DLL. It provides a degree-740 crustal field with per-point uncertainty estimates and a high-resolution survey coverage flag. See [docs/features/hdgm-support/README.md](docs/features/hdgm-support/README.md) for setup instructions.
 
 ### Uncertainty Estimation
 
@@ -121,9 +124,30 @@ See [`examples/GeoMagSharp.Example`](examples/GeoMagSharp.Example) for a runnabl
 - **`ModelReader`** - Parses COF/DAT coefficient files into model objects
 - **`Calculator`** - Low-level spherical harmonic calculation engine
 - **`CalculationOptions`** - Configuration for latitude, longitude, date, elevation, etc.
+- **`ModelDiscovery`** - Enumerates loadable model files in a folder (COF, DAT, HDGM .dll)
+
+### Discovering models in a folder
+
+`ModelDiscovery.DiscoverModels(folderPath)` enumerates every loadable model file (`.cof`, `.dat`, HDGM `.dll`) in a folder without knowing each format's filename rules:
+
+```csharp
+foreach (var d in ModelDiscovery.DiscoverModels("./coefficients"))
+    Console.WriteLine($"{d.DisplayName} ({d.DetectedType}) {d.MinDate}..{d.MaxDate}");
+
+// e.g.   WMM-2025 (WMM)  2025..2030
+//        IGRF2025 (IGRF) 1900..2030    // latest epoch label for multi-epoch IGRF files
+//        HDGM2025 (HDGM) 2000..2030
+```
+
+For multi-epoch IGRF/DGRF `.COF` files, `DisplayName` reflects the latest epoch (e.g. `"IGRF2025"` for IGRF14.COF), with `MinDate`/`MaxDate` covering the full validity range across all contained epochs. Single-epoch models (WMM, EMM, BGGM) report their header-stated year and a 5-year MaxDate.
+
+Pass `new ModelDiscoveryOptions { UseCache = true }` to populate a `.models.json` cache for fast subsequent startups. The cache is schema-versioned and auto-invalidates when classifier behavior changes between library versions.
+
+`ModelDiscovery.DescribeFile(path)` performs the same inspection on a single file. See `ScanMode`, `ModelDiscoveryOptions`, and `ModelDescriptor` IntelliSense for full options.
 
 ### Model Classes
 
+- **`ModelDescriptor`** - Read-only snapshot returned by `ModelDiscovery` (file path, detected type, display name, validity range)
 - **`MagneticModelSet`** - A set of magnetic models (main field + secular variation)
 - **`MagneticModelCollection`** - Manages multiple model sets with JSON serialization
 - **`MagneticCalculations`** - Calculation results (declination, inclination, field components)

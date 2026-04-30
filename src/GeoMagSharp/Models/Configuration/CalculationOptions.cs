@@ -34,6 +34,10 @@ namespace GeoMagSharp
             ElevationValue = 0;
             ElevationUnit = Distance.Unit.meter;
             ElevationIsAltitude = true;
+
+            SurveyDepthMeters = null;
+            WellboreAzimuthDeg = null;
+            WellboreInclinationDeg = null;
         }
 
         /// <summary>
@@ -54,6 +58,10 @@ namespace GeoMagSharp
             ElevationValue = other.ElevationValue;
             ElevationUnit = other.ElevationUnit;
             ElevationIsAltitude = other.ElevationIsAltitude;
+
+            SurveyDepthMeters = other.SurveyDepthMeters;
+            WellboreAzimuthDeg = other.WellboreAzimuthDeg;
+            WellboreInclinationDeg = other.WellboreInclinationDeg;
         }
 
         #endregion
@@ -85,6 +93,22 @@ namespace GeoMagSharp
         /// Set this for commercial models (BGGM, HDGM) or IFR corrections.
         /// </summary>
         public GeomagneticModelCategory? ModelCategoryOverride { get; set; }
+
+        /// <summary>
+        /// Survey depth below surface (meters, positive downward). Null to skip depth correction.
+        /// Used for dipole depth correction per SPE-128217-MS.
+        /// </summary>
+        public double? SurveyDepthMeters { get; set; }
+
+        /// <summary>
+        /// Wellbore magnetic azimuth (degrees, 0-360). Null to skip tool-frame error calculations (Eq 5-8).
+        /// </summary>
+        public double? WellboreAzimuthDeg { get; set; }
+
+        /// <summary>
+        /// Wellbore inclination (degrees, 0-180). Null to skip tool-frame error calculations (Eq 5-8).
+        /// </summary>
+        public double? WellboreInclinationDeg { get; set; }
 
         #region Getters & Setters
 

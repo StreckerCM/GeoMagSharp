@@ -1,0 +1,45 @@
+{
+  "result": [
+    {
+      "date": 2000,
+      "elevation": 0,
+      "inclination": -72.99266,
+      "ycomponent": 15686.8,
+      "totalintensity_sv": -79.2,
+      "horintensity": 16607.1,
+      "latitude": -80,
+      "zcomponent": -54294.6,
+      "zcomponent_sv": 86.3,
+      "declination": 70.83595,
+      "ycomponent_sv": 5,
+      "declination_sv": -0.06093,
+      "xcomponent_sv": 20.4,
+      "xcomponent": 5451.7,
+      "totalintensity": 56777.7,
+      "inclination_sv": 0.03647,
+      "longitude": -120,
+      "horintensity_sv": 11.4
+    }
+  ],
+  "model": "DGRF2000",
+  "units": {
+    "inclination": "degrees",
+    "elevation": "km",
+    "ycomponent": "nanoTesla (nT)",
+    "totalintensity_sv": "nanoTesla (nT)",
+    "horintensity": "nanoTesla (nT)",
+    "latitude": "degrees",
+    "zcomponent": "nanoTesla (nT)",
+    "zcomponent_sv": "nanoTesla (nT)",
+    "declination": "degrees",
+    "ycomponent_sv": "nanoTesla (nT)",
+    "declination_sv": "degrees",
+    "xcomponent_sv": "nanoTesla (nT)",
+    "xcomponent": "nanoTesla (nT)",
+    "totalintensity": "nanoTesla (nT)",
+    "inclination_sv": "degrees",
+    "horintensity_sv": "nanoTesla (nT)",
+    "longitude": "degrees"
+  },
+  "version": "1.2.1"
+}
