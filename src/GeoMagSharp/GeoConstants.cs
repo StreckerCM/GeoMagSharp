@@ -32,19 +32,28 @@ namespace GeoMagSharp
 
         /// <summary>
         /// Maximum spherical harmonic degree supported.
-        /// Standard WMM/IGRF use degree 12-13, WMMHR uses degree 18.
-        /// Set to 20 to provide headroom for future high-resolution models.
         /// </summary>
+        /// <remarks>
+        /// No longer used. The calculator (Calculator.cs) sizes its scratch buffers
+        /// dynamically from <see cref="Coefficients.MaxDegree"/> per evaluation, and
+        /// <see cref="MagneticModel.Max_Degree"/> reports a model's actual degree from
+        /// its coefficient count. This constant remains for backward binary compatibility
+        /// and will be removed in a future major version.
+        /// </remarks>
+        [Obsolete("No longer used; calculator sizes dynamically from the loaded model's Coefficients.MaxDegree. Will be removed in a future major version.")]
         public const Int32 MaxDeg = 20;
 
         /// <summary>
         /// Maximum number of spherical harmonic coefficients
         /// </summary>
+        [Obsolete("No longer used; see MaxDeg. Will be removed in a future major version.")]
         public static Int32 MaxCoeff
         {
             get
             {
-                return (MaxDeg * (MaxDeg + 2) + 1); /* index starts with 1!, (from old Fortran?) */
+#pragma warning disable CS0618
+                return (MaxDeg * (MaxDeg + 2) + 1);
+#pragma warning restore CS0618
             }
         }
 

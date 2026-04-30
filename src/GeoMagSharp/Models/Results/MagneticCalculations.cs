@@ -30,6 +30,7 @@ namespace GeoMagSharp
             VerticalComp = new MagneticValue();
             TotalField = new MagneticValue();
             Uncertainty = null;
+            DepthCorrection = null;
         }
 
         /// <summary>
@@ -47,6 +48,7 @@ namespace GeoMagSharp
             VerticalComp = new MagneticValue(other.VerticalComp);
             TotalField = new MagneticValue(other.TotalField);
             Uncertainty = other.Uncertainty; // Reference copy — uncertainty is immutable per calculation
+            DepthCorrection = other.DepthCorrection; // Reference copy — immutable per calculation
         }
 
         /// <summary>
@@ -151,6 +153,12 @@ namespace GeoMagSharp
         /// Null if model category is Unknown and no override was provided.
         /// </summary>
         public GeomagneticUncertainty Uncertainty { get; set; }
+
+        /// <summary>
+        /// Dipole depth correction results per SPE-128217-MS.
+        /// Null if no survey depth was provided in CalculationOptions.
+        /// </summary>
+        public DepthCorrectionResult DepthCorrection { get; set; }
 
         #endregion
     }

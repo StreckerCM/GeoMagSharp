@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <None Include="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Discovery\Fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
