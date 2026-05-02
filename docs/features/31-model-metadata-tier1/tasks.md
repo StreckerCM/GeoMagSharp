@@ -2,7 +2,7 @@
 
 Issue: #31
 Branch: feature/31-model-metadata-tier1
-Version bump: 1.7.1 → 1.8.0 (additive API surface)
+Version bump: 1.7.1 → 1.7.2 (polish — metadata already in source files, just being discarded)
 
 ## Scope
 

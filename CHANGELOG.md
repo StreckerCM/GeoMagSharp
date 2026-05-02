@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.7.2 (2026-05-02)
+
+### API Polish
+- **`ModelDescriptor` exposes additional metadata** (#31): five properties that were always present in the file's existing header but previously discarded:
+  - `MaxDegree` (main field spherical harmonic degree)
+  - `SecularVariationDegree` (often differs from main, e.g. 13/8 for IGRF2025)
+  - `MinAltitudeKm` / `MaxAltitudeKm` (altitude validity bounds)
+  - `ReleaseDate` (when the model was published)
+- Extraction is format-aware:
+  - **IGRF/DGRF .COF**: degree, SV degree, and altitude come from the latest epoch header — reuses the existing multi-epoch scan (no extra I/O).
+  - **WMM/WMMHR/EMM/BGGM .COF**: `ReleaseDate` parsed from the first-line date; `MaxDegree` scanned from coefficient rows (max `n`).
+  - **Quick mode**: unchanged; new fields stay null.
+- Backwards compatible: existing `ModelDescriptor` constructor calls work unchanged via optional parameters appended to the end. No behavior change for consumers that don't consult the new properties.
+
 ## v1.7.1 (2026-04-29)
 
 ### Bug Fixes
