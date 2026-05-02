@@ -135,5 +135,55 @@ namespace GeoMagSharp_UnitTests.Discovery
             Assert.AreEqual(2025.0, d.MinDate);
             Assert.AreEqual(2030.0, d.MaxDate);
         }
+
+        // ─── #31 Tier 1: richer metadata extraction ─────────────────────
+
+        [TestMethod]
+        public void Inspect_Igrf14MultiEpoch_PopulatesDegreeAndAltitude()
+        {
+            // Latest epoch in fixture is "IGRF2025  2025.00 13  8  0 2025.00 2030.00   -1.0  600.0"
+            // Expected fields from #31 Tier 1: MaxDegree=13, SecularVariationDegree=8,
+            // MinAltitudeKm=-1.0, MaxAltitudeKm=600.0
+            var d = ModelHeaderInspector.Inspect(Fixture("IGRF14_multiepoch.COF"));
+            Assert.AreEqual(13, d.MaxDegree, "Main field degree from latest epoch parts[2]");
+            Assert.AreEqual(8, d.SecularVariationDegree, "SV degree from latest epoch parts[3]");
+            Assert.AreEqual(-1.0, d.MinAltitudeKm);
+            Assert.AreEqual(600.0, d.MaxAltitudeKm);
+            Assert.IsNull(d.ReleaseDate, "IGRF/DGRF headers don't carry release date");
+        }
+
+        [TestMethod]
+        public void Inspect_Wmm2025Sample_ParsesReleaseDate()
+        {
+            // Sample fixture has only the header line: "2025.0  WMM-2025  12/10/2024"
+            // Expected: ReleaseDate = 2024-12-10. No coefficient lines, so MaxDegree is null.
+            var d = ModelHeaderInspector.Inspect(Fixture("WMM2025_sample.COF"));
+            Assert.IsNotNull(d.ReleaseDate);
+            Assert.AreEqual(new System.DateTime(2024, 12, 10), d.ReleaseDate.Value);
+            Assert.IsNull(d.MaxDegree, "Sample fixture has no coefficient lines to scan");
+            Assert.IsNull(d.MinAltitudeKm, "WMM headers don't include altitude validity");
+        }
+
+        [TestMethod]
+        public void Inspect_WmmWithCoefficients_ScansMaxDegreeFromCoefficientLines()
+        {
+            // Fixture has WMM header + coefficient rows up to n=12.
+            // Expected: MaxDegree = 12 from scanning coefficient lines.
+            var d = ModelHeaderInspector.Inspect(Fixture("WMM_with_coefficients.COF"));
+            Assert.AreEqual(knownModels.WMM, d.DetectedType);
+            Assert.AreEqual(12, d.MaxDegree, "Scanned from highest n in coefficient rows");
+            Assert.AreEqual(new System.DateTime(2024, 12, 10), d.ReleaseDate.Value);
+        }
+
+        [TestMethod]
+        public void Inspect_CorruptHeader_LeavesNewMetadataNull()
+        {
+            var d = ModelHeaderInspector.Inspect(Fixture("corrupt_header.COF"));
+            Assert.IsNull(d.MaxDegree);
+            Assert.IsNull(d.SecularVariationDegree);
+            Assert.IsNull(d.MinAltitudeKm);
+            Assert.IsNull(d.MaxAltitudeKm);
+            Assert.IsNull(d.ReleaseDate);
+        }
     }
 }
