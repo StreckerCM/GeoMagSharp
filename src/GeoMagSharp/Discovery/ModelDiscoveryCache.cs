@@ -31,7 +31,15 @@ namespace GeoMagSharp.Discovery
         //   2 - 1.7.1: invalidate v1 caches that may contain buggy IGRF/DGRF
         //       DisplayName ("IGRF00") and MaxDate (1905) values from
         //       single-line ModelHeaderInspector. See issues #24, #26.
-        private const int CurrentSchemaVersion = 2;
+        //   3 - 1.7.2: invalidate v2 caches that pre-date the Tier 1 metadata
+        //       fields (MaxDegree, SecularVariationDegree, MinAltitudeKm,
+        //       MaxAltitudeKm, ReleaseDate). Old v2 entries don't carry these,
+        //       so a fresh classification pass is required. See issue #31.
+        //   4 - 1.7.2: invalidate v3 caches that pre-date the HDGM Tier 3
+        //       crustal-degree lookup (HdgmModelMetadata). Old v3 entries
+        //       cached HDGM descriptors with MaxDegree=null; a fresh pass
+        //       populates 720/790/1040 per CIRES.
+        private const int CurrentSchemaVersion = 4;
 
         /// <summary>
         /// Loads the cache file. Returns an empty list if the file is missing,

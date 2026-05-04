@@ -176,6 +176,28 @@ namespace GeoMagSharp_UnitTests.Discovery
         }
 
         [TestMethod]
+        public void Inspect_RealBundledIgrf14_PopulatesAltitudeAndDegree()
+        {
+            // DIAGNOSTIC: validate against the actual production-bundled IGRF14.COF
+            // (the one shipped in the package and used by GUI consumers), not just
+            // the synthetic fixture. If this passes but consumers still see null
+            // altitude, the issue is downstream of the inspector.
+            string realCof = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                "coefficient", "IGRF14.COF");
+            if (!File.Exists(realCof))
+            {
+                Assert.Inconclusive("Production IGRF14.COF not present at " + realCof);
+                return;
+            }
+            var d = ModelHeaderInspector.Inspect(realCof);
+            Assert.AreEqual(knownModels.IGRF, d.DetectedType);
+            Assert.AreEqual(13, d.MaxDegree, "Real IGRF14.COF latest epoch degree");
+            Assert.AreEqual(8, d.SecularVariationDegree, "Real IGRF14.COF latest epoch SV degree");
+            Assert.AreEqual(-1.0, d.MinAltitudeKm);
+            Assert.AreEqual(600.0, d.MaxAltitudeKm);
+        }
+
+        [TestMethod]
         public void Inspect_CorruptHeader_LeavesNewMetadataNull()
         {
             var d = ModelHeaderInspector.Inspect(Fixture("corrupt_header.COF"));

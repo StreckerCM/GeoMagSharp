@@ -13,16 +13,24 @@ Add five Tier 1 properties to `ModelDescriptor`:
 - `MaxAltitudeKm` (double?) — upper altitude validity bound
 - `ReleaseDate` (DateTime?) — when the model was published (distinct from validity range)
 
-Tier 2 (`EpochCount`, `Source`, `CoefficientCount`) and Tier 3 (HDGM DLL exports) are deferred to follow-up issues. HDGM DLL metadata research is more involved than COF/DAT parsing.
+Tier 2 (`EpochCount`, `Source`, `CoefficientCount`) is deferred to a follow-up issue.
+
+Tier 3 (HDGM metadata) was originally deferred but folded back into 1.7.2 once research established that:
+- The HDGM DLL exports only `hdgmcalc` (no metadata getters)
+- VERSIONINFO is stripped, PE timestamp is faked (reproducible build)
+- The C-source `HDGMheader.h` carries `HDGM_MAX_CRUSTAL_MODEL_DEGREES 740` but that's a max-array-sizing constant under NOAA's developer-package license, not the operative degree
+- CIRES (NOAA's research partner) publishes the operative crustal degree per HDGM release year on its public Geomagnetic Models page — citable, no licensing involved
+
+The Tier 3 implementation is a filename-keyed lookup (`HdgmModelMetadata.GetMaxDegreeFromFilename`) that maps `hdgm{year}*.dll` → CIRES-published degree (720 for 2017–2020, 790 for 2021–2025, 1040 for 2026). Out-of-range years return null.
 
 ## Format-specific extraction
 
 | Property | IGRF/DGRF | WMM/WMMHR | HDGM (DLL) |
 |---|---|---|---|
-| MaxDegree | epoch header parts[2] | scan max `n` in coefficient lines | DLL export (deferred — Tier 3) |
-| SecularVariationDegree | epoch header parts[3] | not in file (likely null) | not applicable |
-| MinAltitudeKm / MaxAltitudeKm | epoch header parts[7] / parts[8] | not in WMM header (likely null) | DLL export (deferred — Tier 3) |
-| ReleaseDate | not typically present | first line parts[2] (e.g. "11/13/2024") | DLL export (deferred — Tier 3) |
+| MaxDegree | epoch header parts[2] | scan max `n` in coefficient lines | filename-keyed CIRES lookup (Tier 3, in 1.7.2) |
+| SecularVariationDegree | epoch header parts[3] | not in file (likely null) | null (not on CIRES public page) |
+| MinAltitudeKm / MaxAltitudeKm | epoch header parts[7] / parts[8] | not in WMM header (likely null) | null (not on CIRES public page) |
+| ReleaseDate | not typically present | first line parts[2] (e.g. "11/13/2024") | null (only year is publicly stated) |
 
 For multi-epoch IGRF/DGRF: extract from the **last** (latest) epoch's header — that's the degree/altitude relevant to current calculations.
 
@@ -46,6 +54,10 @@ For multi-epoch IGRF/DGRF: extract from the **last** (latest) epoch's header —
   - IGRF14 multi-epoch fixture: MaxDegree, SecularVariationDegree, AltitudeRange from latest epoch header
   - HDGM .dll fixture (if available): all Tier 1 fields stay null (deferred to Tier 3)
 - [ ] All existing tests still pass
+- [x] Add `HdgmModelMetadata.GetMaxDegreeFromFilename` (filename → CIRES crustal degree)
+- [x] Wire `HdgmModelMetadata` into `ModelDiscovery.ClassifyFile` HDGM branch + `DescribeFile`
+- [x] Bump cache schema 3 → 4 (HDGM descriptor values now include MaxDegree)
+- [x] Tests: parameterized version-to-degree mapping, RT/64-bit suffix variants, out-of-range null behavior, v3 cache invalidation
 
 ## Constructor signature
 
@@ -75,8 +87,8 @@ Single IMPLEMENTER pass with TDD: write a failing test (e.g. `Inspect_Wmm2025_Ha
 ## Out of scope
 
 - Tier 2 (`EpochCount`, `Source`, `CoefficientCount`) — file as separate issue if desired
-- Tier 3 HDGM DLL metadata — file as separate issue with NOAA-API research scope
-- AutoSize / Layout / GUI consumer updates (will land separately in [GeoMagSharpGUI #61](https://github.com/StreckerCM/GeoMagSharpGUI/issues/61) once 1.8.0 ships)
+- HDGM SecularVariationDegree, altitude bounds, exact ReleaseDate — these aren't on the CIRES public page; only the developer-package C header has them, and we won't redistribute that
+- AutoSize / Layout / GUI consumer updates (will land separately in [GeoMagSharpGUI #61](https://github.com/StreckerCM/GeoMagSharpGUI/issues/61))
 
 ## Completion Criteria
 

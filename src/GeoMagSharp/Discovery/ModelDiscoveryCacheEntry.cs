@@ -42,5 +42,25 @@ namespace GeoMagSharp.Discovery
 
         /// <summary>Optional description carried through.</summary>
         public string Description { get; set; }
+
+        // Tier 1 metadata (#31, schema v3). Null for entries written by older
+        // schema versions; null on disk for formats where the field is not
+        // available (e.g. ReleaseDate is null for IGRF/DGRF, altitude bounds
+        // are null for WMM/WMMHR).
+
+        /// <summary>Main field spherical harmonic degree, null if unknown.</summary>
+        public int? MaxDegree { get; set; }
+
+        /// <summary>Secular variation degree, null if unknown or not applicable.</summary>
+        public int? SecularVariationDegree { get; set; }
+
+        /// <summary>Lower altitude validity bound in km, null if unknown.</summary>
+        public double? MinAltitudeKm { get; set; }
+
+        /// <summary>Upper altitude validity bound in km, null if unknown.</summary>
+        public double? MaxAltitudeKm { get; set; }
+
+        /// <summary>Model release date, null if unknown or not present in file.</summary>
+        public DateTime? ReleaseDate { get; set; }
     }
 }
