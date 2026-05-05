@@ -39,7 +39,11 @@ namespace GeoMagSharp.Discovery
         //       crustal-degree lookup (HdgmModelMetadata). Old v3 entries
         //       cached HDGM descriptors with MaxDegree=null; a fresh pass
         //       populates 720/790/1040 per CIRES.
-        private const int CurrentSchemaVersion = 4;
+        //   5 - 1.7.2: invalidate v4 caches that pre-date the EpochCount
+        //       Tier 2 field. Old v4 entries cached descriptors with
+        //       EpochCount=null; a fresh pass populates the IGRF/DGRF
+        //       per-file count and 1 for single-epoch models.
+        private const int CurrentSchemaVersion = 5;
 
         /// <summary>
         /// Loads the cache file. Returns an empty list if the file is missing,

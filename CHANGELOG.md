@@ -1,22 +1,23 @@
 # Changelog
 
-## v1.7.2 (2026-05-03)
+## v1.7.2 (2026-05-04)
 
 ### API Polish
-- **`ModelDescriptor` exposes additional metadata** (#31): five properties that were always present in the file's existing header but previously discarded:
+- **`ModelDescriptor` exposes additional metadata** (#31): six properties that were always present in the file's existing header but previously discarded:
   - `MaxDegree` (main field spherical harmonic degree)
   - `SecularVariationDegree` (often differs from main, e.g. 13/8 for IGRF2025)
   - `MinAltitudeKm` / `MaxAltitudeKm` (altitude validity bounds)
   - `ReleaseDate` (when the model was published)
+  - `EpochCount` (number of distinct coefficient epochs — 1 for single-epoch models, N for IGRF/DGRF)
 - Extraction is format-aware:
-  - **IGRF/DGRF .COF**: degree, SV degree, and altitude come from the latest epoch header — reuses the existing multi-epoch scan (no extra I/O).
-  - **WMM/WMMHR/EMM/BGGM .COF**: `ReleaseDate` parsed from the first-line date; `MaxDegree` scanned from coefficient rows (max `n`).
-  - **HDGM .dll**: `MaxDegree` resolved via filename-keyed CIRES lookup (`HdgmModelMetadata`) — the DLL exports only `hdgmcalc` and strips VERSIONINFO, so we cite the CIRES public table (720 for HDGM2017–2020, 790 for 2021–2025, 1040 for 2026). Out-of-range filenames stay null.
+  - **IGRF/DGRF .COF**: degree, SV degree, altitude, and epoch count come from the per-epoch header walk — reuses the existing multi-epoch scan (no extra I/O).
+  - **WMM/WMMHR/EMM/BGGM .COF**: `ReleaseDate` parsed from the first-line date; `MaxDegree` scanned from coefficient rows (max `n`); `EpochCount` is 1 by definition.
+  - **HDGM .dll**: `MaxDegree` resolved via filename-keyed CIRES lookup (`HdgmModelMetadata`) — the DLL exports only `hdgmcalc` and strips VERSIONINFO, so we cite the CIRES public table (720 for HDGM2017–2020, 790 for 2021–2025, 1040 for 2026). Out-of-range filenames stay null. `EpochCount` is 1 (single fused continuous model with built-in secular variation).
   - **Quick mode**: unchanged; new fields stay null.
 - Backwards compatible: existing `ModelDescriptor` constructor calls work unchanged via optional parameters appended to the end. No behavior change for consumers that don't consult the new properties.
 
 ### Bug Fixes
-- **Cache round-trip dropped Tier 1 fields** (#31): `ModelDiscoveryCacheEntry` didn't carry the new metadata properties, and `ModelDiscovery`'s cache-hit reconstruction passed only the original 6 args to `ModelDescriptor`. First scan populated fields correctly; second scan (cache hit) silently returned them as null. DTO + reconstruction now plumb all 11 fields end-to-end. Cache schema bumped 2 → 4 to invalidate stale entries from prior 1.7.x test builds.
+- **Cache round-trip dropped Tier 1 fields** (#31): `ModelDiscoveryCacheEntry` didn't carry the new metadata properties, and `ModelDiscovery`'s cache-hit reconstruction passed only the original 6 args to `ModelDescriptor`. First scan populated fields correctly; second scan (cache hit) silently returned them as null. DTO + reconstruction now plumb all 12 fields end-to-end. Cache schema bumped 2 → 5 to invalidate stale entries from prior 1.7.x test builds.
 
 ## v1.7.1 (2026-04-29)
 

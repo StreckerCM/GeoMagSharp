@@ -46,7 +46,8 @@ namespace GeoMagSharp_UnitTests.Discovery
                 MinDate = 2025.0,
                 MaxDate = 2030.0,
                 MaxDegree = 12,
-                ReleaseDate = new DateTime(2024, 11, 13, 0, 0, 0, DateTimeKind.Utc)
+                ReleaseDate = new DateTime(2024, 11, 13, 0, 0, 0, DateTimeKind.Utc),
+                EpochCount = 1
             },
             new ModelDiscoveryCacheEntry
             {
@@ -56,7 +57,8 @@ namespace GeoMagSharp_UnitTests.Discovery
                 DetectedType = knownModels.HDGM,
                 DisplayName = "HDGM2019",
                 MinDate = 1900.0,
-                MaxDate = 2021.0
+                MaxDate = 2021.0,
+                EpochCount = 1
             }
         };
 
@@ -111,14 +113,15 @@ namespace GeoMagSharp_UnitTests.Discovery
             var loaded = ModelDiscoveryCache.TryLoad(_cacheFile, null);
 
             Assert.AreEqual(12, loaded[0].MaxDegree, "WMM MaxDegree");
+            Assert.AreEqual(1, loaded[0].EpochCount, "WMM EpochCount round-trips");
             Assert.IsTrue(loaded[0].ReleaseDate.HasValue, "WMM ReleaseDate populated");
             Assert.AreEqual(new DateTime(2024, 11, 13, 0, 0, 0, DateTimeKind.Utc).Ticks,
                             loaded[0].ReleaseDate.Value.ToUniversalTime().Ticks,
                             "WMM ReleaseDate round-trips as UTC");
 
-            // HDGM entry has no Tier 1 fields populated (Tier 3 deferred);
-            // they must round-trip as null, not as zero / DateTime.MinValue.
-            Assert.IsFalse(loaded[1].MaxDegree.HasValue, "HDGM MaxDegree stays null");
+            // HDGM entry has no SV/altitude/release-date populated (those fields
+            // aren't on the CIRES public page); but EpochCount=1 should survive.
+            Assert.AreEqual(1, loaded[1].EpochCount, "HDGM EpochCount round-trips");
             Assert.IsFalse(loaded[1].MinAltitudeKm.HasValue, "HDGM MinAltitudeKm stays null");
             Assert.IsFalse(loaded[1].ReleaseDate.HasValue, "HDGM ReleaseDate stays null");
         }
@@ -141,11 +144,11 @@ namespace GeoMagSharp_UnitTests.Discovery
         }
 
         [TestMethod]
-        public void Load_LegacyV3Cache_DiscardedAfterSchemaBumpToV4()
+        public void Load_LegacyV3Cache_DiscardedAfterSchemaBumpToV4OrLater()
         {
             // v3 entries cached HDGM descriptors with MaxDegree=null because
             // the Tier 3 HdgmModelMetadata lookup didn't exist yet. After the
-            // v4 bump, TryLoad must discard v3 caches so HDGM entries get
+            // v4+ bumps, TryLoad must discard v3 caches so HDGM entries get
             // re-classified with their CIRES-published crustal degree.
             string v3Json = "{\"schemaVersion\":3,\"entries\":[" +
                 "{\"RelativePath\":\"hdgm2019.dll\",\"FileSize\":7345664," +
@@ -154,7 +157,25 @@ namespace GeoMagSharp_UnitTests.Discovery
                 "\"MinDate\":1900.0,\"MaxDate\":2020.0,\"Description\":\"\"}]}";
             File.WriteAllText(_cacheFile, v3Json);
             var loaded = ModelDiscoveryCache.TryLoad(_cacheFile, null);
-            Assert.AreEqual(0, loaded.Count, "v3 caches must be discarded after schema bump to v4");
+            Assert.AreEqual(0, loaded.Count, "v3 caches must be discarded after schema bump");
+        }
+
+        [TestMethod]
+        public void Load_LegacyV4Cache_DiscardedAfterSchemaBumpToV5()
+        {
+            // v4 entries cached descriptors without EpochCount. After the v5
+            // bump, TryLoad must discard v4 caches so the inspector re-runs
+            // and populates the count (1 for single-epoch, N for IGRF/DGRF).
+            string v4Json = "{\"schemaVersion\":4,\"entries\":[" +
+                "{\"RelativePath\":\"IGRF14.COF\",\"FileSize\":157950," +
+                "\"FileLastWriteUtc\":\"2026-04-26T04:47:48Z\"," +
+                "\"DetectedType\":3,\"DisplayName\":\"IGRF2025\"," +
+                "\"MinDate\":1900.0,\"MaxDate\":2030.0,\"Description\":\"\"," +
+                "\"MaxDegree\":13,\"SecularVariationDegree\":8," +
+                "\"MinAltitudeKm\":-1.0,\"MaxAltitudeKm\":600.0}]}";
+            File.WriteAllText(_cacheFile, v4Json);
+            var loaded = ModelDiscoveryCache.TryLoad(_cacheFile, null);
+            Assert.AreEqual(0, loaded.Count, "v4 caches must be discarded after schema bump to v5");
         }
 
         [TestMethod]

@@ -62,5 +62,8 @@ namespace GeoMagSharp.Discovery
 
         /// <summary>Model release date, null if unknown or not present in file.</summary>
         public DateTime? ReleaseDate { get; set; }
+
+        /// <summary>Number of distinct coefficient epochs (1 for single-epoch models, N for IGRF/DGRF), null if unknown.</summary>
+        public int? EpochCount { get; set; }
     }
 }

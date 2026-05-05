@@ -27,6 +27,7 @@ namespace GeoMagSharp
         /// <param name="minAltitudeKm">Lower altitude validity bound (km MSL), or null if not specified.</param>
         /// <param name="maxAltitudeKm">Upper altitude validity bound (km MSL), or null if not specified.</param>
         /// <param name="releaseDate">Date the model was published (distinct from validity range), or null if not extracted.</param>
+        /// <param name="epochCount">Number of distinct coefficient epochs in the model file. 1 for single-epoch models (WMM, WMMHR, EMM, BGGM, HDGM); the count of epoch header lines for multi-epoch IGRF/DGRF files. Null if not extracted.</param>
         public ModelDescriptor(
             string filePath,
             knownModels detectedType,
@@ -38,7 +39,8 @@ namespace GeoMagSharp
             int? secularVariationDegree = null,
             double? minAltitudeKm = null,
             double? maxAltitudeKm = null,
-            DateTime? releaseDate = null)
+            DateTime? releaseDate = null,
+            int? epochCount = null)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             DetectedType = detectedType;
@@ -51,6 +53,7 @@ namespace GeoMagSharp
             MinAltitudeKm = minAltitudeKm;
             MaxAltitudeKm = maxAltitudeKm;
             ReleaseDate = releaseDate;
+            EpochCount = epochCount;
         }
 
         /// <summary>Absolute or relative path to the file as discovered.</summary>
@@ -103,6 +106,16 @@ namespace GeoMagSharp
         /// typically do not.
         /// </summary>
         public DateTime? ReleaseDate { get; }
+
+        /// <summary>
+        /// Number of distinct coefficient epochs in the model file, or null if
+        /// not extracted. 1 for single-epoch models (WMM, WMMHR, EMM, BGGM, HDGM —
+        /// these encode time evolution via secular variation rather than discrete
+        /// epoch snapshots). For multi-epoch IGRF/DGRF .COF files, this is the
+        /// number of 5-year epoch header lines (e.g. 26 for IGRF14 covering
+        /// 1900–2030 in 5-year steps).
+        /// </summary>
+        public int? EpochCount { get; }
 
         /// <inheritdoc />
         public override string ToString()

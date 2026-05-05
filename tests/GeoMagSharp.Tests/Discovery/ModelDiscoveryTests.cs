@@ -281,6 +281,7 @@ namespace GeoMagSharp_UnitTests.Discovery
                 var first = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
                 Assert.AreEqual(13, first[0].MaxDegree, "first scan: degree from header");
                 Assert.AreEqual(-1.0, first[0].MinAltitudeKm, "first scan: altitude from header");
+                Assert.AreEqual(6, first[0].EpochCount, "first scan: counted epoch headers");
 
                 var second = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
                 Assert.AreEqual(13, second[0].MaxDegree,
@@ -291,6 +292,8 @@ namespace GeoMagSharp_UnitTests.Discovery
                     "cache-hit reconstruction must preserve MinAltitudeKm");
                 Assert.AreEqual(600.0, second[0].MaxAltitudeKm,
                     "cache-hit reconstruction must preserve MaxAltitudeKm");
+                Assert.AreEqual(6, second[0].EpochCount,
+                    "cache-hit reconstruction must preserve EpochCount");
             }
         }
 

@@ -1,17 +1,18 @@
-# Feature: Expose model metadata via ModelDescriptor (Tier 1)
+# Feature: Expose model metadata via ModelDescriptor (Tier 1 + 3 + EpochCount)
 
 Issue: #31
 Branch: feature/31-model-metadata-tier1
-Version bump: 1.7.1 → 1.7.2 (polish — metadata already in source files, just being discarded)
+Version bump: 1.7.1 → 1.7.2
 
 ## Scope
 
-Add five Tier 1 properties to `ModelDescriptor`:
+Add six properties to `ModelDescriptor`:
 - `MaxDegree` (int?) — main field spherical harmonic degree
 - `SecularVariationDegree` (int?) — secular variation degree (often differs from main, e.g. 13/8 for IGRF)
 - `MinAltitudeKm` (double?) — lower altitude validity bound
 - `MaxAltitudeKm` (double?) — upper altitude validity bound
 - `ReleaseDate` (DateTime?) — when the model was published (distinct from validity range)
+- `EpochCount` (int?) — number of distinct coefficient epochs (1 for single-epoch models, N for IGRF/DGRF)
 
 Tier 2 (`EpochCount`, `Source`, `CoefficientCount`) is deferred to a follow-up issue.
 
@@ -31,6 +32,7 @@ The Tier 3 implementation is a filename-keyed lookup (`HdgmModelMetadata.GetMaxD
 | SecularVariationDegree | epoch header parts[3] | not in file (likely null) | null (not on CIRES public page) |
 | MinAltitudeKm / MaxAltitudeKm | epoch header parts[7] / parts[8] | not in WMM header (likely null) | null (not on CIRES public page) |
 | ReleaseDate | not typically present | first line parts[2] (e.g. "11/13/2024") | null (only year is publicly stated) |
+| EpochCount | count of valid epoch header lines | 1 (single-epoch by definition) | 1 (single fused continuous model) |
 
 For multi-epoch IGRF/DGRF: extract from the **last** (latest) epoch's header — that's the degree/altitude relevant to current calculations.
 
@@ -58,6 +60,8 @@ For multi-epoch IGRF/DGRF: extract from the **last** (latest) epoch's header —
 - [x] Wire `HdgmModelMetadata` into `ModelDiscovery.ClassifyFile` HDGM branch + `DescribeFile`
 - [x] Bump cache schema 3 → 4 (HDGM descriptor values now include MaxDegree)
 - [x] Tests: parameterized version-to-degree mapping, RT/64-bit suffix variants, out-of-range null behavior, v3 cache invalidation
+- [x] Add `EpochCount` (int?) — count epoch headers for IGRF/DGRF, =1 for single-epoch COF, =1 for HDGM
+- [x] Bump cache schema 4 → 5 + tests for EpochCount round-trip and v4 cache invalidation
 
 ## Constructor signature
 
@@ -86,7 +90,7 @@ Single IMPLEMENTER pass with TDD: write a failing test (e.g. `Inspect_Wmm2025_Ha
 
 ## Out of scope
 
-- Tier 2 (`EpochCount`, `Source`, `CoefficientCount`) — file as separate issue if desired
+- Tier 2 `Source` and `CoefficientCount` — `Source` is a `knownModels` → string lookup the GUI can do itself; `CoefficientCount` is derivable from `MaxDegree * (MaxDegree + 2) * EpochCount`. Neither warrants library API surface. (`EpochCount` itself was folded into 1.7.2.)
 - HDGM SecularVariationDegree, altitude bounds, exact ReleaseDate — these aren't on the CIRES public page; only the developer-package C header has them, and we won't redistribute that
 - AutoSize / Layout / GUI consumer updates (will land separately in [GeoMagSharpGUI #61](https://github.com/StreckerCM/GeoMagSharpGUI/issues/61))
 

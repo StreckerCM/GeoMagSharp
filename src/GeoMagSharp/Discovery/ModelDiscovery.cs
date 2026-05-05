@@ -97,7 +97,8 @@ namespace GeoMagSharp
                         descriptor = new ModelDescriptor(filePath, c.DetectedType, c.DisplayName,
                             c.MinDate, c.MaxDate, c.Description,
                             c.MaxDegree, c.SecularVariationDegree,
-                            c.MinAltitudeKm, c.MaxAltitudeKm, c.ReleaseDate);
+                            c.MinAltitudeKm, c.MaxAltitudeKm, c.ReleaseDate,
+                            c.EpochCount);
                         cacheEntryToWrite = c;
                     }
                     else
@@ -119,7 +120,8 @@ namespace GeoMagSharp
                                 SecularVariationDegree = descriptor.SecularVariationDegree,
                                 MinAltitudeKm = descriptor.MinAltitudeKm,
                                 MaxAltitudeKm = descriptor.MaxAltitudeKm,
-                                ReleaseDate = descriptor.ReleaseDate
+                                ReleaseDate = descriptor.ReleaseDate,
+                                EpochCount = descriptor.EpochCount
                             };
                         }
                     }
@@ -201,10 +203,14 @@ namespace GeoMagSharp
                 }
                 var (minDate, maxDate) = HdgmDateProbe.Probe(
                     path => CreateRealInvokerOrNull(path), filePath);
+                // HDGM is conceptually single-epoch: one coefficient set per
+                // component (core, crust, ext) with secular variation built in,
+                // not a sequence of 5-year snapshots.
                 return new ModelDescriptor(filePath, knownModels.HDGM,
                     BuildHdgmDisplayName(filePath), minDate, maxDate,
                     description: null,
-                    maxDegree: HdgmModelMetadata.GetMaxDegreeFromFilename(filePath));
+                    maxDegree: HdgmModelMetadata.GetMaxDegreeFromFilename(filePath),
+                    epochCount: 1);
             }
 
             return null;
@@ -238,7 +244,8 @@ namespace GeoMagSharp
                 return new ModelDescriptor(filePath, knownModels.HDGM,
                     BuildHdgmDisplayName(filePath), result.minDate, result.maxDate,
                     description: null,
-                    maxDegree: HdgmModelMetadata.GetMaxDegreeFromFilename(filePath));
+                    maxDegree: HdgmModelMetadata.GetMaxDegreeFromFilename(filePath),
+                    epochCount: 1);
             }
 
             return null;

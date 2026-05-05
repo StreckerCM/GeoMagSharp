@@ -150,6 +150,7 @@ namespace GeoMagSharp_UnitTests.Discovery
             Assert.AreEqual(-1.0, d.MinAltitudeKm);
             Assert.AreEqual(600.0, d.MaxAltitudeKm);
             Assert.IsNull(d.ReleaseDate, "IGRF/DGRF headers don't carry release date");
+            Assert.AreEqual(6, d.EpochCount, "Synthetic IGRF14 fixture has 6 epoch header lines");
         }
 
         [TestMethod]
@@ -162,6 +163,7 @@ namespace GeoMagSharp_UnitTests.Discovery
             Assert.AreEqual(new System.DateTime(2024, 12, 10), d.ReleaseDate.Value);
             Assert.IsNull(d.MaxDegree, "Sample fixture has no coefficient lines to scan");
             Assert.IsNull(d.MinAltitudeKm, "WMM headers don't include altitude validity");
+            Assert.AreEqual(1, d.EpochCount, "Single-epoch .COF formats have EpochCount=1");
         }
 
         [TestMethod]
@@ -195,6 +197,7 @@ namespace GeoMagSharp_UnitTests.Discovery
             Assert.AreEqual(8, d.SecularVariationDegree, "Real IGRF14.COF latest epoch SV degree");
             Assert.AreEqual(-1.0, d.MinAltitudeKm);
             Assert.AreEqual(600.0, d.MaxAltitudeKm);
+            Assert.AreEqual(26, d.EpochCount, "Real IGRF14.COF covers 1900–2030 in 5-year steps = 26 epochs");
         }
 
         [TestMethod]
@@ -206,6 +209,7 @@ namespace GeoMagSharp_UnitTests.Discovery
             Assert.IsNull(d.MinAltitudeKm);
             Assert.IsNull(d.MaxAltitudeKm);
             Assert.IsNull(d.ReleaseDate);
+            Assert.IsNull(d.EpochCount, "Unclassifiable files signal 'unknown' via null EpochCount, not 1");
         }
     }
 }

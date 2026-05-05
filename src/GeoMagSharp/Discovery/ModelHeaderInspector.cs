@@ -60,7 +60,8 @@ namespace GeoMagSharp.Discovery
                         secularVariationDegree: info.SecularVariationDegree,
                         minAltitudeKm: info.MinAltitudeKm,
                         maxAltitudeKm: info.MaxAltitudeKm,
-                        releaseDate: null);
+                        releaseDate: null,
+                        epochCount: info.EpochCount);
                 }
                 // Scan failed (no recognizable epoch lines) — fall through to single-line behavior
             }
@@ -78,13 +79,19 @@ namespace GeoMagSharp.Discovery
                 ? ScanMaxDegreeFromCoefficients(filePath)
                 : null;
 
+            // Single-epoch .COF formats (WMM/WMMHR/EMM/BGGM) carry one coefficient
+            // set per file. EpochCount stays null for unclassified files to signal
+            // "we couldn't parse this" rather than "this is one epoch".
+            int? epochCount = (type != knownModels.NONE) ? (int?)1 : null;
+
             return new ModelDescriptor(filePath, type, displayName, minDate, maxDate,
                 description: null,
                 maxDegree: maxDegree,
                 secularVariationDegree: null,
                 minAltitudeKm: null,
                 maxAltitudeKm: null,
-                releaseDate: releaseDate);
+                releaseDate: releaseDate,
+                epochCount: epochCount);
         }
 
         // ─── Multi-epoch IGRF/DGRF scan ──────────────────────────────────
@@ -99,6 +106,7 @@ namespace GeoMagSharp.Discovery
             public int? SecularVariationDegree; // from latest epoch's parts[3]
             public double? MinAltitudeKm;       // from latest epoch's parts[7]
             public double? MaxAltitudeKm;       // from latest epoch's parts[8]
+            public int EpochCount;              // count of valid epoch header lines
         }
 
         /// <summary>
@@ -133,6 +141,11 @@ namespace GeoMagSharp.Discovery
                     if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out endYear)) continue;
                     if (startYear < 1900.0 || startYear > 2100.0) continue;
                     if (endYear < startYear || endYear > 2100.0) continue;
+
+                    // Count every successfully-parsed epoch header, not just the
+                    // latest — out-of-order epochs in a malformed file should still
+                    // contribute to EpochCount so consumers see the actual file size.
+                    info.EpochCount++;
 
                     if (!info.MinDate.HasValue || startYear < info.MinDate.Value)
                     {
