@@ -38,6 +38,8 @@ namespace GeoMagSharp
             SurveyDepthMeters = null;
             WellboreAzimuthDeg = null;
             WellboreInclinationDeg = null;
+
+            AllowExtrapolation = false;
         }
 
         /// <summary>
@@ -62,6 +64,8 @@ namespace GeoMagSharp
             SurveyDepthMeters = other.SurveyDepthMeters;
             WellboreAzimuthDeg = other.WellboreAzimuthDeg;
             WellboreInclinationDeg = other.WellboreInclinationDeg;
+
+            AllowExtrapolation = other.AllowExtrapolation;
         }
 
         #endregion
@@ -109,6 +113,18 @@ namespace GeoMagSharp
         /// Wellbore inclination (degrees, 0-180). Null to skip tool-frame error calculations (Eq 5-8).
         /// </summary>
         public double? WellboreInclinationDeg { get; set; }
+
+        /// <summary>
+        /// When <c>true</c>, <see cref="GeoMag.MagneticCalculations"/> and
+        /// <see cref="GeoMag.MagneticCalculationsAsync"/> skip the date-range check
+        /// against the loaded model's <c>MinDate</c>/<c>MaxDate</c>. Default is
+        /// <c>false</c> — strict; out-of-range dates throw <c>GeoMagExceptionOutOfRange</c>.
+        /// Set to <c>true</c> only when raw extrapolation is intentional (research,
+        /// model comparison studies). The underlying calculation engine may still
+        /// produce nonsense values past the model's validity range; for HDGM the
+        /// native sentinel inside <c>HDGMCalculationAdapter</c> remains the last guard.
+        /// </summary>
+        public bool AllowExtrapolation { get; set; }
 
         #region Getters & Setters
 
