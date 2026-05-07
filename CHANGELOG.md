@@ -18,6 +18,7 @@
 
 ### Bug Fixes
 - **Cache round-trip dropped Tier 1 fields** (#31): `ModelDiscoveryCacheEntry` didn't carry the new metadata properties, and `ModelDiscovery`'s cache-hit reconstruction passed only the original 6 args to `ModelDescriptor`. First scan populated fields correctly; second scan (cache hit) silently returned them as null. DTO + reconstruction now plumb all 12 fields end-to-end. Cache schema bumped 2 → 5 to invalidate stale entries from prior 1.7.x test builds.
+- **HDGM silently extrapolated past `MaxDate`** (#30): `GeoMag.MagneticCalculations` already validated dates against the loaded model's `IsDateInRange`, but `HDGMModelLoader.Load` hardcoded `MaxDate = 9999.0` so the check was permissive-by-design for HDGM. The loader now invokes `HdgmDateProbe` (~8 native calls) to find the DLL's actual upper bound; falls back to the wide-permissive default if probe fails. Adds `CalculationOptions.AllowExtrapolation` (default `false`) for callers that intentionally want raw extrapolation. `GeoMag.LoadModel(INativeHdgmInvoker, ...)` gains optional `minDate` / `maxDate` parameters for tests and advanced extension scenarios.
 
 ## v1.7.1 (2026-04-29)
 

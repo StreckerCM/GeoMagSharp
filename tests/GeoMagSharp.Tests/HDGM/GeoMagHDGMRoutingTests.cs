@@ -155,5 +155,147 @@ namespace GeoMagSharp_UnitTests.HDGM
                 // This test mainly verifies the no-modelName overload doesn't throw.
             }
         }
+
+        // ───────── #30: HDGM date-range validation ─────────
+        // Before #30, HDGM loads hardcoded MaxDate=9999, so the existing
+        // IsDateInRange check never tripped. The fix probes the DLL for its
+        // real MaxDate (via HDGMModelLoader) and adds an opt-in
+        // AllowExtrapolation flag for callers who explicitly want raw
+        // extrapolation. These tests use the LoadModel(invoker, ..., minDate, maxDate)
+        // overload to inject tight bounds without needing a real DLL.
+
+        private const double TightMinDate = 2018.0;
+        private const double TightMaxDate = 2020.0;
+
+        private static GeoMag NewGeoMagWithTightBounds()
+        {
+            var fake = new FakeHdgmInvoker { CannedOutData = new double[25], CannedReturnValue = 0 };
+            var geo = new GeoMag();
+            geo.LoadModel(fake, "HDGM-TIGHT", minDate: TightMinDate, maxDate: TightMaxDate);
+            return geo;
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void MagneticCalculations_StartDatePastMaxDate_ThrowsOutOfRange()
+        {
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2025, 6, 1)
+                });
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void MagneticCalculations_StartDateBeforeMinDate_ThrowsOutOfRange()
+        {
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2010, 6, 1)
+                });
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(GeoMagExceptionOutOfRange))]
+        public void MagneticCalculations_EndDatePastMaxDate_ThrowsOutOfRange()
+        {
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2019, 1, 1),
+                    EndDate = new DateTime(2025, 1, 1)
+                });
+            }
+        }
+
+        [TestMethod]
+        public void MagneticCalculations_AllowExtrapolation_BypassesDateCheck()
+        {
+            // Same scenario that throws above; with AllowExtrapolation=true the
+            // check is skipped and the calculation proceeds (FakeHdgmInvoker
+            // returns canned data — real DLL would extrapolate or sentinel).
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2025, 6, 1),
+                    AllowExtrapolation = true
+                });
+                Assert.AreEqual(1, geo.ResultsOfCalculation.Count,
+                    "AllowExtrapolation=true must skip date check and produce results");
+            }
+        }
+
+        [TestMethod]
+        public void MagneticCalculations_StartDateJustInsideMaxDate_DoesNotThrow()
+        {
+            // 2019-12-31 → decimal-year ~2019.9986 (day 364.5 / 365), just below
+            // TightMaxDate=2020.0. Confirms the inclusive upper-bound check holds
+            // for dates that DO fall inside the model's validity range.
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2019, 12, 31)
+                });
+                Assert.AreEqual(1, geo.ResultsOfCalculation.Count);
+            }
+        }
+
+        [TestMethod]
+        public void MagneticCalculations_StartDateJustInsideMinDate_DoesNotThrow()
+        {
+            // 2018-06-01 → decimal-year ~2018.42, well inside [2018.0, 2020.0].
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                geo.MagneticCalculations(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2018, 6, 1)
+                });
+                Assert.AreEqual(1, geo.ResultsOfCalculation.Count);
+            }
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task MagneticCalculationsAsync_StartDatePastMaxDate_ThrowsOutOfRange()
+        {
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                await Assert.ThrowsExceptionAsync<GeoMagExceptionOutOfRange>(() =>
+                    geo.MagneticCalculationsAsync(new CalculationOptions
+                    {
+                        Latitude = 40.0, Longitude = -100.0,
+                        StartDate = new DateTime(2025, 6, 1)
+                    }));
+            }
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task MagneticCalculationsAsync_AllowExtrapolation_BypassesDateCheck()
+        {
+            using (var geo = NewGeoMagWithTightBounds())
+            {
+                await geo.MagneticCalculationsAsync(new CalculationOptions
+                {
+                    Latitude = 40.0, Longitude = -100.0,
+                    StartDate = new DateTime(2025, 6, 1),
+                    AllowExtrapolation = true
+                });
+                Assert.AreEqual(1, geo.ResultsOfCalculation.Count);
+            }
+        }
     }
 }
