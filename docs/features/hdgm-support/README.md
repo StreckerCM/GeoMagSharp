@@ -62,9 +62,12 @@ using (var geo = new GeoMag())
     Console.WriteLine($"D = {r.Declination.Value:F3}°");
     Console.WriteLine($"F = {r.TotalField.Value:F1} nT");
 
-    // HDGM-specific extras (null on other models)
-    if (r.Uncertainty.SigmaD.HasValue)
-        Console.WriteLine($"σ_D = {r.Uncertainty.SigmaD:F3}°");
+    // Per-point uncertainty (HDGM populates Source = Hdgm and all 7 component σ).
+    // ISCWSA-source uncertainty leaves the per-component fields null.
+    Console.WriteLine($"Source: {r.Uncertainty.Source}");
+    Console.WriteLine($"σ_D = {r.Uncertainty.Declination:F3}°");
+    if (r.Uncertainty.NorthComp.HasValue)
+        Console.WriteLine($"σ_X = {r.Uncertainty.NorthComp:F1} nT");
     if (r.Uncertainty.HighResolutionCoverage == true)
         Console.WriteLine("Location has high-resolution NSD survey coverage");
 }
@@ -101,10 +104,34 @@ IGRF, EMM, DGRF) remain cross-platform — only HDGM is restricted.
 ## Date validity
 
 HDGM ships with model coefficients for a defined year range (e.g., HDGM2019
-covers approximately 1900–2020). GeoMagSharp does not parse the version year
-from the filename; it trusts the DLL's own validation. Dates outside the
-supported range surface as `GeoMagExceptionOutOfRange` with a descriptive
-message indicating the issue.
+covers approximately 1900–2027). GeoMagSharp probes the DLL at load time
+(`HdgmDateProbe` calls `hdgmcalc` at year-incremented dates until the
+sentinel boundary is hit) and stores the result as `MinDate`/`MaxDate` on
+the loaded model. By default, `MagneticCalculations` and
+`MagneticCalculationsAsync` validate the requested date against this range
+and throw `GeoMagExceptionOutOfRange` when out of bounds.
+
+For research scenarios that need raw extrapolation past the validity end,
+opt in via `CalculationOptions.AllowExtrapolation = true`. The HDGM DLL's
+internal sentinel (`outData[0] == -99999`) remains the last-line guard
+and surfaces as `GeoMagExceptionOutOfRange` regardless of the flag.
+
+## HDGM version detection (1.7.2+)
+
+In addition to the date probe, GeoMagSharp parses the version year from the
+filename (`hdgm{year}.dll`) to populate `ModelDescriptor.MaxDegree` from the
+[CIRES](https://geomag.colorado.edu/geomagnetic-and-electric-field-models)
+public table:
+
+| Filename year | Crustal degree |
+|---|---|
+| 2017–2020 | 720 |
+| 2021–2025 | 790 |
+| 2026 | 1040 |
+
+Files outside the CIRES-published range yield `null` for `MaxDegree`. The
+NOAA DLL itself exports no metadata (`hdgmcalc` is the only symbol), so this
+filename heuristic is the only citable path.
 
 ## Integration tests
 
