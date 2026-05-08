@@ -1,6 +1,7 @@
 /****************************************************************************
  * File:            GeomagneticUncertaintyHDGMExtensionTests.cs
- * Description:     Tests for per-point sigma and coverage flag extensions to GeomagneticUncertainty
+ * Description:     Tests for the per-component / per-point uncertainty fields
+ *                  (consolidated under the value-side names in 1.7.2 — see #13)
  * Author:          Christopher Strecker
  * Website:         https://github.com/StreckerCM/GeoMagSharp
  ****************************************************************************/
@@ -14,30 +15,48 @@ namespace GeoMagSharp_UnitTests.HDGM
     public class GeomagneticUncertaintyHDGMExtensionTests
     {
         [TestMethod]
-        public void NewInstance_AllPerPointSigmasAreNull()
+        public void NewInstance_PerComponentFieldsAreNull()
         {
+            // Per-component σ fields are nullable so callers can distinguish
+            // "ISCWSA didn't provide this" from "value happens to be 0".
             var u = new GeomagneticUncertainty();
-            Assert.IsNull(u.SigmaD);
-            Assert.IsNull(u.SigmaI);
-            Assert.IsNull(u.SigmaH);
-            Assert.IsNull(u.SigmaX);
-            Assert.IsNull(u.SigmaY);
-            Assert.IsNull(u.SigmaZ);
-            Assert.IsNull(u.SigmaF);
-        }
-
-        [TestMethod]
-        public void NewInstance_HighResolutionCoverageIsNull()
-        {
-            var u = new GeomagneticUncertainty();
+            Assert.IsNull(u.HorizontalIntensity);
+            Assert.IsNull(u.NorthComp);
+            Assert.IsNull(u.EastComp);
+            Assert.IsNull(u.VerticalComp);
             Assert.IsNull(u.HighResolutionCoverage);
         }
 
         [TestMethod]
-        public void SetSigmaD_RoundTrips()
+        public void NewInstance_AlwaysPopulatedFieldsAreZero()
         {
-            var u = new GeomagneticUncertainty { SigmaD = 0.123 };
-            Assert.AreEqual(0.123, u.SigmaD);
+            // Declination/Inclination/TotalField are non-nullable — every
+            // uncertainty source provides them. They default to 0 on a fresh
+            // instance (consumers should consult Source to know provenance).
+            var u = new GeomagneticUncertainty();
+            Assert.AreEqual(0.0, u.Declination);
+            Assert.AreEqual(0.0, u.Inclination);
+            Assert.AreEqual(0.0, u.TotalField);
+        }
+
+        [TestMethod]
+        public void SetPerComponent_RoundTrips()
+        {
+            var u = new GeomagneticUncertainty
+            {
+                Source = UncertaintySource.Hdgm,
+                Declination = 0.123,
+                Inclination = 0.16,
+                TotalField = 107,
+                HorizontalIntensity = 100,
+                NorthComp = 50,
+                EastComp = 60,
+                VerticalComp = 70
+            };
+            Assert.AreEqual(UncertaintySource.Hdgm, u.Source);
+            Assert.AreEqual(0.123, u.Declination);
+            Assert.AreEqual(100.0, u.HorizontalIntensity);
+            Assert.AreEqual(50.0, u.NorthComp);
         }
 
         [TestMethod]
@@ -48,57 +67,87 @@ namespace GeoMagSharp_UnitTests.HDGM
         }
 
         [TestMethod]
-        public void ScaleTo_PropagatesPerPointSigmas()
+        public void ScaleTo_PropagatesAllFields()
         {
             var u = new GeomagneticUncertainty
             {
-                SigmaD = 0.1, SigmaI = 0.2, SigmaH = 100, SigmaX = 50, SigmaY = 60, SigmaZ = 70, SigmaF = 110,
+                Source = UncertaintySource.Hdgm,
+                Declination = 0.1,
+                Inclination = 0.2,
+                TotalField = 110,
+                HorizontalIntensity = 100,
+                NorthComp = 50,
+                EastComp = 60,
+                VerticalComp = 70,
                 HighResolutionCoverage = true
             };
             var scaled = u.ScaleTo(2.0);
-            Assert.AreEqual(0.2, scaled.SigmaD);
-            Assert.AreEqual(0.4, scaled.SigmaI);
-            Assert.AreEqual(200, scaled.SigmaH);
-            Assert.AreEqual(100, scaled.SigmaX);
-            Assert.AreEqual(120, scaled.SigmaY);
-            Assert.AreEqual(140, scaled.SigmaZ);
-            Assert.AreEqual(220, scaled.SigmaF);
-            Assert.AreEqual(true, scaled.HighResolutionCoverage);
+            Assert.AreEqual(UncertaintySource.Hdgm, scaled.Source);
+            Assert.AreEqual(0.2, scaled.Declination);
+            Assert.AreEqual(0.4, scaled.Inclination);
+            Assert.AreEqual(220, scaled.TotalField);
+            Assert.AreEqual(200.0, scaled.HorizontalIntensity);
+            Assert.AreEqual(100.0, scaled.NorthComp);
+            Assert.AreEqual(120.0, scaled.EastComp);
+            Assert.AreEqual(140.0, scaled.VerticalComp);
+            Assert.AreEqual(true, scaled.HighResolutionCoverage, "boolean flag is not scaled, just propagated");
         }
 
         [TestMethod]
-        public void ScaleTo_NullSigmasRemainNull()
+        public void ScaleTo_NullPerComponentFieldsRemainNull()
         {
-            var u = new GeomagneticUncertainty();
+            // ISCWSA case: per-component fields stay null after scaling.
+            var u = new GeomagneticUncertainty
+            {
+                Source = UncertaintySource.Iscwsa,
+                Declination = 0.36,
+                Inclination = 0.24,
+                TotalField = 157
+            };
             var scaled = u.ScaleTo(2.0);
-            Assert.IsNull(scaled.SigmaD);
+            Assert.IsNull(scaled.HorizontalIntensity);
+            Assert.IsNull(scaled.NorthComp);
+            Assert.IsNull(scaled.EastComp);
+            Assert.IsNull(scaled.VerticalComp);
             Assert.IsNull(scaled.HighResolutionCoverage);
         }
 
         [TestMethod]
-        public void ScaleTo_ZeroFactor_AllPerPointSigmasAreZero()
+        public void ScaleTo_ZeroFactor_AllValuesAreZero()
         {
             var u = new GeomagneticUncertainty
             {
-                SigmaD = 0.5, SigmaI = 0.5, SigmaH = 100, SigmaX = 50, SigmaY = 60, SigmaZ = 70, SigmaF = 110
+                Declination = 0.5, Inclination = 0.5, TotalField = 110,
+                HorizontalIntensity = 100, NorthComp = 50, EastComp = 60, VerticalComp = 70
             };
             var scaled = u.ScaleTo(0.0);
-            Assert.AreEqual(0.0, scaled.SigmaD);
-            Assert.AreEqual(0.0, scaled.SigmaI);
-            Assert.AreEqual(0.0, scaled.SigmaH);
-            Assert.AreEqual(0.0, scaled.SigmaX);
-            Assert.AreEqual(0.0, scaled.SigmaY);
-            Assert.AreEqual(0.0, scaled.SigmaZ);
-            Assert.AreEqual(0.0, scaled.SigmaF);
+            Assert.AreEqual(0.0, scaled.Declination);
+            Assert.AreEqual(0.0, scaled.HorizontalIntensity);
+            Assert.AreEqual(0.0, scaled.NorthComp);
         }
 
         [TestMethod]
-        public void ScaleTo_NegativeFactor_ProducesNegativeSigmas()
+        public void ScaleTo_NegativeFactor_ProducesNegativeValues()
         {
-            var u = new GeomagneticUncertainty { SigmaD = 0.5, SigmaH = 100 };
+            // Documented behavior: scaling is a linear multiply; negative scale
+            // yields negative values, even though σ is conceptually non-negative.
+            var u = new GeomagneticUncertainty { Declination = 0.5, HorizontalIntensity = 100 };
             var scaled = u.ScaleTo(-1.0);
-            Assert.AreEqual(-0.5, scaled.SigmaD);
-            Assert.AreEqual(-100, scaled.SigmaH);
+            Assert.AreEqual(-0.5, scaled.Declination);
+            Assert.AreEqual(-100.0, scaled.HorizontalIntensity);
+        }
+
+        [TestMethod]
+        public void DipAngle_Obsolete_ForwardsToInclination()
+        {
+            // Bridge for legacy callers: setting DipAngle stores in Inclination,
+            // and reading DipAngle returns Inclination's value.
+            var u = new GeomagneticUncertainty { Inclination = 0.42 };
+#pragma warning disable CS0618 // intentionally exercising the obsolete alias
+            Assert.AreEqual(0.42, u.DipAngle);
+            u.DipAngle = 0.55;
+#pragma warning restore CS0618
+            Assert.AreEqual(0.55, u.Inclination);
         }
     }
 }

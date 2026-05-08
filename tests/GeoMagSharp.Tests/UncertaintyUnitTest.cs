@@ -55,7 +55,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.72, scaled.Declination, 0.001);
             Assert.AreEqual(10000, scaled.BhDependentDec, 0.1);
             Assert.AreEqual(314, scaled.TotalField, 0.1);
-            Assert.AreEqual(0.48, scaled.DipAngle, 0.001);
+            Assert.AreEqual(0.48, scaled.Inclination, 0.001);
             Assert.AreEqual("Rev5.13", scaled.Revision);
             Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, scaled.ModelCategory);
         }
@@ -79,7 +79,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, scaled.Declination, 0.0001);
             Assert.AreEqual(5000, scaled.BhDependentDec, 0.0001);
             Assert.AreEqual(157, scaled.TotalField, 0.0001);
-            Assert.AreEqual(0.24, scaled.DipAngle, 0.0001);
+            Assert.AreEqual(0.24, scaled.Inclination, 0.0001);
         }
 
         [TestMethod]
@@ -101,7 +101,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.0, scaled.Declination, 0.0001);
             Assert.AreEqual(0.0, scaled.BhDependentDec, 0.0001);
             Assert.AreEqual(0.0, scaled.TotalField, 0.0001);
-            Assert.AreEqual(0.0, scaled.DipAngle, 0.0001);
+            Assert.AreEqual(0.0, scaled.Inclination, 0.0001);
         }
 
         [TestMethod]
@@ -198,7 +198,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, result.Declination, 0.001);
             Assert.AreEqual(5000, result.BhDependentDec, 0.1);
             Assert.AreEqual(157, result.TotalField, 0.1);
-            Assert.AreEqual(0.24, result.DipAngle, 0.001);
+            Assert.AreEqual(0.24, result.Inclination, 0.001);
             Assert.AreEqual("Rev5.13", result.Revision);
         }
 
@@ -213,7 +213,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.30, result.Declination, 0.001);
             Assert.AreEqual(4118, result.BhDependentDec, 0.1);
             Assert.AreEqual(107, result.TotalField, 0.1);
-            Assert.AreEqual(0.16, result.DipAngle, 0.001);
+            Assert.AreEqual(0.16, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -228,7 +228,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.36, result.Declination, 0.001);
             Assert.AreEqual(5000, result.BhDependentDec, 0.1);
             Assert.AreEqual(130, result.TotalField, 0.1);
-            Assert.AreEqual(0.20, result.DipAngle, 0.001);
+            Assert.AreEqual(0.20, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -242,7 +242,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.15, result.Declination, 0.001);
             Assert.AreEqual(1500, result.BhDependentDec, 0.1);
             Assert.AreEqual(50, result.TotalField, 0.1);
-            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+            Assert.AreEqual(0.10, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -257,7 +257,7 @@ namespace GeoMagSharp_UnitTests
             Assert.AreEqual(0.15, result.Declination, 0.001);
             Assert.AreEqual(1500, result.BhDependentDec, 0.1);
             Assert.AreEqual(50, result.TotalField, 0.1);
-            Assert.AreEqual(0.10, result.DipAngle, 0.001);
+            Assert.AreEqual(0.10, result.Inclination, 0.001);
         }
 
         [TestMethod]
@@ -446,9 +446,50 @@ namespace GeoMagSharp_UnitTests
         }
 
         [TestMethod]
-        public void Integration_WMMCalculation_HasLowResolutionUncertainty()
+        public void Integration_WMMCalculation_WithIscwsaPreference_HasLowResolutionUncertainty()
         {
-            // Arrange — load WMM2025 and run a spot calculation
+            // Arrange — load WMM2025 and explicitly request ISCWSA Level 1 uncertainty.
+            // (Default since 1.7.2 is Auto, which uses the WMM native error model for
+            // WMM/WMMHR — see Integration_WMMCalculation_AutoPreference_UsesWmmErrorModel.)
+            var filePath = FindWMM2025Path();
+            if (filePath == null)
+                Assert.Inconclusive("WMM2025.COF not found in TestData folder");
+
+            var geoMag = new GeoMagSharp.GeoMag();
+            geoMag.LoadModel(filePath);
+
+            var options = new GeoMagSharp.CalculationOptions
+            {
+                Latitude = 40.0,
+                Longitude = -105.0,
+                StartDate = new System.DateTime(2025, 1, 1),
+                UncertaintyPreference = UncertaintyModelPreference.Iscwsa
+            };
+            options.SetElevation(0, GeoMagSharp.Distance.Unit.meter);
+
+            // Act
+            geoMag.MagneticCalculations(options);
+
+            // Assert
+            Assert.IsTrue(geoMag.ResultsOfCalculation.Count > 0);
+            var result = geoMag.ResultsOfCalculation[0];
+            Assert.IsNotNull(result.Uncertainty);
+            Assert.AreEqual(UncertaintySource.Iscwsa, result.Uncertainty.Source);
+            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.Uncertainty.ModelCategory);
+            Assert.AreEqual(0.36, result.Uncertainty.Declination, 0.001);
+            Assert.AreEqual(5000, result.Uncertainty.BhDependentDec, 0.1);
+            Assert.AreEqual(157, result.Uncertainty.TotalField, 0.1);
+            Assert.AreEqual(0.24, result.Uncertainty.Inclination, 0.001);
+            // ISCWSA Level 1 doesn't provide per-component sigmas:
+            Assert.IsNull(result.Uncertainty.HorizontalIntensity);
+            Assert.IsNull(result.Uncertainty.NorthComp);
+        }
+
+        [TestMethod]
+        public void Integration_WMMCalculation_AutoPreference_UsesWmmErrorModel()
+        {
+            // 1.7.2 default: WMM/WMMHR use the WMM native error model (Tech Report
+            // Section 3.4) — provides location-dependent δD and per-component σ.
             var filePath = FindWMM2025Path();
             if (filePath == null)
                 Assert.Inconclusive("WMM2025.COF not found in TestData folder");
@@ -461,21 +502,28 @@ namespace GeoMagSharp_UnitTests
                 Latitude = 40.0,
                 Longitude = -105.0,
                 StartDate = new System.DateTime(2025, 1, 1)
+                // UncertaintyPreference defaults to Auto
             };
             options.SetElevation(0, GeoMagSharp.Distance.Unit.meter);
 
-            // Act
             geoMag.MagneticCalculations(options);
 
-            // Assert
-            Assert.IsTrue(geoMag.ResultsOfCalculation.Count > 0);
             var result = geoMag.ResultsOfCalculation[0];
             Assert.IsNotNull(result.Uncertainty);
-            Assert.AreEqual(GeoMagSharp.GeomagneticModelCategory.LowResolution, result.Uncertainty.ModelCategory);
-            Assert.AreEqual(0.36, result.Uncertainty.Declination, 0.001);
-            Assert.AreEqual(5000, result.Uncertainty.BhDependentDec, 0.1);
-            Assert.AreEqual(157, result.Uncertainty.TotalField, 0.1);
-            Assert.AreEqual(0.24, result.Uncertainty.DipAngle, 0.001);
+            Assert.AreEqual(UncertaintySource.WmmErrorModel, result.Uncertainty.Source);
+            // WMM2025 constants from Tech Report Section 3.4:
+            Assert.AreEqual(138, result.Uncertainty.TotalField, 0.1);
+            Assert.AreEqual(0.20, result.Uncertainty.Inclination, 0.001);
+            // Per-component σ populated:
+            Assert.AreEqual(133, result.Uncertainty.HorizontalIntensity.Value, 0.1);
+            Assert.AreEqual(137, result.Uncertainty.NorthComp.Value, 0.1);
+            Assert.AreEqual(89,  result.Uncertainty.EastComp.Value,  0.1);
+            Assert.AreEqual(141, result.Uncertainty.VerticalComp.Value, 0.1);
+            // δD is location-dependent — > base C₁ at any finite H:
+            Assert.IsTrue(result.Uncertainty.Declination >= 0.26,
+                "WMM2025 δD must be at least the C₁ base (0.26°) anywhere on Earth");
+            Assert.AreEqual(0, result.Uncertainty.BhDependentDec,
+                "WMM error model bakes Bh-dependence into Declination; BhDependentDec stays 0");
         }
 
         [TestMethod]

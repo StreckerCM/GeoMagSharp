@@ -142,4 +142,46 @@ namespace GeoMagSharp
         /// </summary>
         InFieldReference2 = 5
     }
+
+    /// <summary>
+    /// Selects which uncertainty model to use when the loaded model supports more than one.
+    /// Set on <see cref="CalculationOptions.UncertaintyPreference"/>.
+    /// </summary>
+    public enum UncertaintyModelPreference
+    {
+        /// <summary>
+        /// Default. Uses the model's native error model when available
+        /// (WMM/WMMHR native, HDGM per-point sigmas), ISCWSA Level 1 otherwise.
+        /// </summary>
+        Auto = 0,
+
+        /// <summary>
+        /// Force ISCWSA Level 1 global constants for all model types — useful when
+        /// callers want a single uncertainty source across mixed-model results.
+        /// </summary>
+        Iscwsa = 1,
+
+        /// <summary>
+        /// Force the model's native error model. Throws
+        /// <see cref="System.InvalidOperationException"/> if the loaded model
+        /// has no native error model.
+        /// </summary>
+        Native = 2
+    }
+
+    /// <summary>
+    /// Identifies which uncertainty model produced the values on a
+    /// <see cref="GeomagneticUncertainty"/> instance.
+    /// </summary>
+    public enum UncertaintySource
+    {
+        /// <summary>ISCWSA Level 1 global constants (CDR-SM-03 Rev 8 / ISCWSA Rev5.13).</summary>
+        Iscwsa = 0,
+
+        /// <summary>WMM/WMMHR native error model (location-dependent declination, Tech Report Section 3.4).</summary>
+        WmmErrorModel = 1,
+
+        /// <summary>HDGM DLL per-point sigmas (returned in outData[17..23] of hdgmcalc).</summary>
+        Hdgm = 2
+    }
 }

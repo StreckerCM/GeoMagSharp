@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\iscwsa-uncertainty.json" />
+    <EmbeddedResource Include="Data\wmm-error-model.json" />
   </ItemGroup>
 
   <ItemGroup>

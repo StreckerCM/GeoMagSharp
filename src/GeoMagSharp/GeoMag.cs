@@ -174,9 +174,6 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
-
             while (dateIdx <= timespan.Days)
             {
                 DateTime intervalDate = _CalculationOptions.StartDate.AddDays(dateIdx);
@@ -196,11 +193,18 @@ namespace GeoMagSharp
 
                 if (magCalcDate != null)
                 {
-                    // For HDGM, the adapter already populated per-point Uncertainty.
-                    // For other models, fall back to the global ISCWSA uncertainty.
+                    // HDGM: adapter already populated per-point Uncertainty.
+                    // WMM/WMMHR (Auto/Native): WMM error model — δD depends on this
+                    // result's H, so compute per-date.
+                    // Other COF models: ISCWSA Level 1 (constant; H ignored).
                     if (magCalcDate.Uncertainty == null)
                     {
-                        magCalcDate.Uncertainty = uncertainty;
+                        double h = magCalcDate.HorizontalIntensity != null ? magCalcDate.HorizontalIntensity.Value : 0.0;
+                        magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                            _Models.Type,
+                            _CalculationOptions.ModelCategoryOverride,
+                            _CalculationOptions.UncertaintyPreference,
+                            h);
                     }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
@@ -386,9 +390,6 @@ namespace GeoMagSharp
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
 
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
-
             while (dateIdx <= timespan.Days)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -422,7 +423,12 @@ namespace GeoMagSharp
                 {
                     if (magCalcDate.Uncertainty == null)
                     {
-                        magCalcDate.Uncertainty = uncertainty;
+                        double h = magCalcDate.HorizontalIntensity != null ? magCalcDate.HorizontalIntensity.Value : 0.0;
+                        magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                            _Models.Type,
+                            _CalculationOptions.ModelCategoryOverride,
+                            _CalculationOptions.UncertaintyPreference,
+                            h);
                     }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
@@ -576,14 +582,21 @@ namespace GeoMagSharp
 
             if (magCalc.Uncertainty != null)
             {
+                var u = magCalc.Uncertainty;
                 magCalc.Uncertainty = new GeomagneticUncertainty
                 {
-                    ModelCategory = magCalc.Uncertainty.ModelCategory,
-                    Declination = magCalc.Uncertainty.Declination,
-                    BhDependentDec = magCalc.Uncertainty.BhDependentDec,
-                    TotalField = magCalc.Uncertainty.TotalField,
-                    DipAngle = magCalc.Uncertainty.DipAngle,
-                    Revision = magCalc.Uncertainty.Revision,
+                    Source = u.Source,
+                    ModelCategory = u.ModelCategory,
+                    Revision = u.Revision,
+                    Declination = u.Declination,
+                    Inclination = u.Inclination,
+                    TotalField = u.TotalField,
+                    HorizontalIntensity = u.HorizontalIntensity,
+                    NorthComp = u.NorthComp,
+                    EastComp = u.EastComp,
+                    VerticalComp = u.VerticalComp,
+                    BhDependentDec = u.BhDependentDec,
+                    HighResolutionCoverage = u.HighResolutionCoverage,
                     DepthAzimuthUncertainty = DepthCorrection.DepthAzimuthUncertaintyDeg
                 };
             }

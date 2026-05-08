@@ -133,16 +133,19 @@ namespace GeoMagSharp.HDGM
                 VerticalComp       = new MagneticValue { Value = outData[6],  ChangePerYear = outData[14] },
                 Uncertainty = new GeomagneticUncertainty
                 {
+                    Source               = UncertaintySource.Hdgm,
                     ModelCategory        = GeomagneticModelCategory.HighResolution,
+                    Revision             = "HDGM",
                     // outData[16]: DLL semantics — IsNotCovered (0 = covered, 1 = fallback)
                     HighResolutionCoverage = (outData[16] == 0.0),
-                    SigmaD = outData[17],
-                    SigmaI = outData[18],
-                    SigmaH = outData[19],
-                    SigmaX = outData[20],
-                    SigmaY = outData[21],
-                    SigmaZ = outData[22],
-                    SigmaF = outData[23]
+                    Declination          = outData[17],
+                    Inclination          = outData[18],
+                    HorizontalIntensity  = outData[19],
+                    NorthComp            = outData[20],
+                    EastComp             = outData[21],
+                    VerticalComp         = outData[22],
+                    TotalField           = outData[23],
+                    BhDependentDec       = 0  // HDGM provides per-point Declination σ directly
                     // outData[24] = UsePomme HDGM-RT flag — out of scope for v1
                 }
             };
