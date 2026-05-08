@@ -187,7 +187,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[17] = 0.13;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(0.13, result.Uncertainty?.SigmaD ?? double.NaN, 1e-9);
+            Assert.AreEqual(0.13, result.Uncertainty?.Declination ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -196,7 +196,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[18] = 0.16;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(0.16, result.Uncertainty?.SigmaI ?? double.NaN, 1e-9);
+            Assert.AreEqual(0.16, result.Uncertainty?.Inclination ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -205,7 +205,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[19] = 100.0;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(100.0, result.Uncertainty?.SigmaH ?? double.NaN, 1e-9);
+            Assert.AreEqual(100.0, result.Uncertainty?.HorizontalIntensity ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -214,7 +214,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[20] = 50.0;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(50.0, result.Uncertainty?.SigmaX ?? double.NaN, 1e-9);
+            Assert.AreEqual(50.0, result.Uncertainty?.NorthComp ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -223,7 +223,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[21] = 60.0;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(60.0, result.Uncertainty?.SigmaY ?? double.NaN, 1e-9);
+            Assert.AreEqual(60.0, result.Uncertainty?.EastComp ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -232,7 +232,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[22] = 70.0;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(70.0, result.Uncertainty?.SigmaZ ?? double.NaN, 1e-9);
+            Assert.AreEqual(70.0, result.Uncertainty?.VerticalComp ?? double.NaN, 1e-9);
         }
 
         [TestMethod]
@@ -241,7 +241,7 @@ namespace GeoMagSharp_UnitTests.HDGM
             var data = OutDataAllZero(); data[23] = 107.0;
             var fake = FakeReturning(data);
             var result = HDGMCalculationAdapter.Calculate(DefaultOpts(), DefaultOpts().StartDate, fake);
-            Assert.AreEqual(107.0, result.Uncertainty?.SigmaF ?? double.NaN, 1e-9);
+            Assert.AreEqual(107.0, result.Uncertainty?.TotalField ?? double.NaN, 1e-9);
         }
 
         // ── Native return-code handling ──────────────────────────────────

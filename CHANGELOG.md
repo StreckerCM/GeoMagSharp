@@ -20,6 +20,22 @@
 - **Cache round-trip dropped Tier 1 fields** (#31): `ModelDiscoveryCacheEntry` didn't carry the new metadata properties, and `ModelDiscovery`'s cache-hit reconstruction passed only the original 6 args to `ModelDescriptor`. First scan populated fields correctly; second scan (cache hit) silently returned them as null. DTO + reconstruction now plumb all 12 fields end-to-end. Cache schema bumped 2 → 5 to invalidate stale entries from prior 1.7.x test builds.
 - **HDGM silently extrapolated past `MaxDate`** (#30): `GeoMag.MagneticCalculations` already validated dates against the loaded model's `IsDateInRange`, but `HDGMModelLoader.Load` hardcoded `MaxDate = 9999.0` so the check was permissive-by-design for HDGM. The loader now invokes `HdgmDateProbe` (~8 native calls) to find the DLL's actual upper bound; falls back to the wide-permissive default if probe fails. Adds `CalculationOptions.AllowExtrapolation` (default `false`) for callers that intentionally want raw extrapolation. `GeoMag.LoadModel(INativeHdgmInvoker, ...)` gains optional `minDate` / `maxDate` parameters for tests and advanced extension scenarios.
 
+### Features
+- **WMM native error model + uncertainty consolidation** (#13): WMM and WMMHR now use their published native error model (Tech Report 2025-2030 Section 3.4) by default, providing location-dependent declination uncertainty (`δD = √(C₁² + (C₂/H)²)`) and per-component σ. New `CalculationOptions.UncertaintyPreference` (`Auto` / `Iscwsa` / `Native`) lets callers force a specific source.
+- **Unified `GeomagneticUncertainty` shape**: field names now mirror `MagneticCalculations` exactly — `result.Uncertainty.Inclination` is the σ for `result.Inclination`. The `Source` property (`Iscwsa` / `WmmErrorModel` / `Hdgm`) records provenance. ISCWSA Level 1 populates `Declination`, `Inclination`, `TotalField`, and `BhDependentDec`; WMM and HDGM populate all seven field uncertainties. Closes #13 and consolidates the parallel naming introduced for HDGM in 1.6.0.
+
+### Breaking Changes (with bridges)
+- `GeomagneticUncertainty.DipAngle` is now `[Obsolete]` and forwards to `Inclination`. Existing callers compile with a build warning; update to `Inclination` to clear it.
+- `GeomagneticUncertainty.Sigma{D,I,H,F,X,Y,Z}` (added in 1.6.0 for HDGM per-point sigmas) are **removed** in favor of the unified field names. Migration:
+  - `SigmaD` → `Declination` (was nullable; now non-nullable, populated by every source)
+  - `SigmaI` → `Inclination`
+  - `SigmaF` → `TotalField`
+  - `SigmaH` → `HorizontalIntensity` (still nullable; null for ISCWSA)
+  - `SigmaX` → `NorthComp` (nullable; null for ISCWSA)
+  - `SigmaY` → `EastComp`
+  - `SigmaZ` → `VerticalComp`
+- `GeomagneticUncertainty` setters narrowed `public → internal`. Instances are now immutable to external consumers (constructed by the library).
+
 ## v1.7.1 (2026-04-29)
 
 ### Bug Fixes

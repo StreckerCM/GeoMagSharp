@@ -40,6 +40,8 @@ namespace GeoMagSharp
             WellboreInclinationDeg = null;
 
             AllowExtrapolation = false;
+
+            UncertaintyPreference = UncertaintyModelPreference.Auto;
         }
 
         /// <summary>
@@ -66,6 +68,8 @@ namespace GeoMagSharp
             WellboreInclinationDeg = other.WellboreInclinationDeg;
 
             AllowExtrapolation = other.AllowExtrapolation;
+
+            UncertaintyPreference = other.UncertaintyPreference;
         }
 
         #endregion
@@ -125,6 +129,18 @@ namespace GeoMagSharp
         /// native sentinel inside <c>HDGMCalculationAdapter</c> remains the last guard.
         /// </summary>
         public bool AllowExtrapolation { get; set; }
+
+        /// <summary>
+        /// Selects which uncertainty model to consult when populating
+        /// <see cref="MagneticCalculations.Uncertainty"/>. Default is
+        /// <see cref="UncertaintyModelPreference.Auto"/>: the model's native
+        /// error model is used when available (WMM/WMMHR have one; HDGM provides
+        /// per-point sigmas via the DLL), and ISCWSA Level 1 is used otherwise.
+        /// Set to <see cref="UncertaintyModelPreference.Iscwsa"/> to force ISCWSA
+        /// for all models, or <see cref="UncertaintyModelPreference.Native"/> to
+        /// require the native model (throws if the loaded model has none).
+        /// </summary>
+        public UncertaintyModelPreference UncertaintyPreference { get; set; }
 
         #region Getters & Setters
 

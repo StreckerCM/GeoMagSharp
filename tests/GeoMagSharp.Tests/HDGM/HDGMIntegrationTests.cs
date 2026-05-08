@@ -167,9 +167,9 @@ namespace GeoMagSharp_UnitTests.HDGM
                 });
                 var u = geo.ResultsOfCalculation[0].Uncertainty;
                 Assert.IsNotNull(u);
-                Assert.IsNotNull(u.SigmaD);
-                Assert.IsNotNull(u.SigmaI);
-                Assert.IsNotNull(u.SigmaF);
+                Assert.AreEqual(UncertaintySource.Hdgm, u.Source);
+                Assert.IsNotNull(u.HorizontalIntensity);  // populated per-point by HDGM (not by ISCWSA)
+                Assert.IsNotNull(u.NorthComp);
                 Assert.IsNotNull(u.HighResolutionCoverage); // bool? — should be either true or false, not null
             }
         }
