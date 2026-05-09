@@ -8,12 +8,13 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using GeoMagSharp.Discovery;
 
 namespace GeoMagSharp.HDGM
 {
     /// <summary>
     /// Loads a NOAA HDGM DLL from a user-supplied path into a <see cref="MagneticModelSet"/>
-    /// configured with <see cref="knownModels.HDGM"/>, a permissive date range, and a
+    /// configured with <see cref="knownModels.HDGM"/>, a probed date range, and a
     /// <see cref="LoadLibraryHdgmInvoker"/> populated as the model set's NativeInvoker.
     /// </summary>
     internal static class HDGMModelLoader
@@ -33,14 +34,22 @@ namespace GeoMagSharp.HDGM
                 throw new GeoMagExceptionFileNotFound(string.Format(
                     "Error: The HDGM DLL '{0}' was not found", dllPath));
 
+            // Probe the DLL for its actual date range (#30). The probe makes ~8 hdgmcalc
+            // calls and finds the first sentinel result — authoritative for HDGM, which
+            // strips VERSIONINFO and exports no metadata. Falls back to wide-permissive
+            // bounds on probe failure (corrupt DLL, LoadLibrary error); the runtime
+            // sentinel inside HDGMCalculationAdapter remains the last-line guard.
+            var probed = HdgmDateProbe.Probe(
+                path => new LoadLibraryHdgmInvoker(path), dllPath);
+
             var invoker = new LoadLibraryHdgmInvoker(dllPath);
 
             var set = new MagneticModelSet
             {
                 Type = knownModels.HDGM,
                 Name = Path.GetFileNameWithoutExtension(dllPath).ToUpperInvariant(),
-                MinDate = 1900.0,    // wide-permissive — sentinel is authoritative
-                MaxDate = 9999.0,
+                MinDate = probed.minDate ?? 1900.0,
+                MaxDate = probed.maxDate ?? 9999.0,
                 NativeInvoker = invoker
             };
             set.FileNames.Add(Path.GetFileName(dllPath));

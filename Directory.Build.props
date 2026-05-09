@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <VersionPrefix>1.7.1</VersionPrefix>
+    <VersionPrefix>1.7.2</VersionPrefix>
     <Authors>Christopher Strecker</Authors>
     <Company>Christopher Strecker</Company>
     <Product>GeoMagSharp</Product>

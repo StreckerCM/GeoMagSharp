@@ -109,8 +109,15 @@ namespace GeoMagSharp
         /// <param name="invoker">A non-null INativeHdgmInvoker. The GeoMag instance takes
         /// ownership; disposing the GeoMag will dispose the invoker.</param>
         /// <param name="modelName">Optional display name for the model (defaults to "HDGM-CUSTOM").</param>
+        /// <param name="minDate">Lower bound of the model's valid decimal-year range (default 1900.0).
+        /// Test fakes and mocks can specify a tight bound to exercise out-of-range checks.</param>
+        /// <param name="maxDate">Upper bound of the model's valid decimal-year range (default 9999.0,
+        /// permissive). Production HDGM loads via <see cref="LoadModel(string)"/> probe this from the DLL.</param>
         /// <exception cref="ArgumentNullException">If <paramref name="invoker"/> is null.</exception>
-        public void LoadModel(INativeHdgmInvoker invoker, string modelName = "HDGM-CUSTOM")
+        public void LoadModel(INativeHdgmInvoker invoker,
+            string modelName = "HDGM-CUSTOM",
+            double minDate = 1900.0,
+            double maxDate = 9999.0)
         {
             if (invoker == null) throw new ArgumentNullException(nameof(invoker));
 
@@ -119,8 +126,8 @@ namespace GeoMagSharp
             {
                 Type = knownModels.HDGM,
                 Name = string.IsNullOrWhiteSpace(modelName) ? "HDGM-CUSTOM" : modelName,
-                MinDate = 1900.0,
-                MaxDate = 9999.0,
+                MinDate = minDate,
+                MaxDate = maxDate,
                 NativeInvoker = invoker
             };
         }
@@ -140,7 +147,7 @@ namespace GeoMagSharp
             if (_Models == null || (_Models.NativeInvoker == null && _Models.NumberOfModels.Equals(0)))
                 throw new GeoMagExceptionModelNotLoaded("Error: No models avaliable for calculation");
 
-            if (!_Models.IsDateInRange(inCalculationOptions.StartDate))
+            if (!inCalculationOptions.AllowExtrapolation && !_Models.IsDateInRange(inCalculationOptions.StartDate))
             {
                 throw new GeoMagExceptionOutOfRange(string.Format("Error: the date {0} is out of range for this model{1}The valid date range for the is {2} to {3}",
                     inCalculationOptions.StartDate.ToShortDateString(), Environment.NewLine, _Models.MinDate.ToDateTime().ToShortDateString(),
@@ -150,7 +157,7 @@ namespace GeoMagSharp
 
             if (inCalculationOptions.EndDate.Equals(DateTime.MinValue)) inCalculationOptions.EndDate = inCalculationOptions.StartDate;
 
-            if (!_Models.IsDateInRange(inCalculationOptions.EndDate))
+            if (!inCalculationOptions.AllowExtrapolation && !_Models.IsDateInRange(inCalculationOptions.EndDate))
             {
                 throw new GeoMagExceptionOutOfRange(string.Format("Error: the date {0} is out of range for this model{1}The valid date range for the is {2} to {3}",
                     inCalculationOptions.EndDate.ToShortDateString(), Environment.NewLine, _Models.MinDate.ToDateTime().ToShortDateString(),
@@ -166,9 +173,6 @@ namespace GeoMagSharp
             ResultsOfCalculation = new List<MagneticCalculations>();
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
-
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
 
             while (dateIdx <= timespan.Days)
             {
@@ -189,11 +193,18 @@ namespace GeoMagSharp
 
                 if (magCalcDate != null)
                 {
-                    // For HDGM, the adapter already populated per-point Uncertainty.
-                    // For other models, fall back to the global ISCWSA uncertainty.
+                    // HDGM: adapter already populated per-point Uncertainty.
+                    // WMM/WMMHR (Auto/Native): WMM error model — δD depends on this
+                    // result's H, so compute per-date.
+                    // Other COF models: ISCWSA Level 1 (constant; H ignored).
                     if (magCalcDate.Uncertainty == null)
                     {
-                        magCalcDate.Uncertainty = uncertainty;
+                        double h = magCalcDate.HorizontalIntensity != null ? magCalcDate.HorizontalIntensity.Value : 0.0;
+                        magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                            _Models.Type,
+                            _CalculationOptions.ModelCategoryOverride,
+                            _CalculationOptions.UncertaintyPreference,
+                            h);
                     }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
@@ -341,7 +352,7 @@ namespace GeoMagSharp
             if (_Models == null || (_Models.NativeInvoker == null && _Models.NumberOfModels.Equals(0)))
                 throw new GeoMagExceptionModelNotLoaded("Error: No models avaliable for calculation");
 
-            if (!_Models.IsDateInRange(inCalculationOptions.StartDate))
+            if (!inCalculationOptions.AllowExtrapolation && !_Models.IsDateInRange(inCalculationOptions.StartDate))
             {
                 throw new GeoMagExceptionOutOfRange(string.Format("Error: the date {0} is out of range for this model{1}The valid date range for the is {2} to {3}",
                     inCalculationOptions.StartDate.ToShortDateString(), Environment.NewLine, _Models.MinDate.ToDateTime().ToShortDateString(),
@@ -350,7 +361,7 @@ namespace GeoMagSharp
 
             if (inCalculationOptions.EndDate.Equals(DateTime.MinValue)) inCalculationOptions.EndDate = inCalculationOptions.StartDate;
 
-            if (!_Models.IsDateInRange(inCalculationOptions.EndDate))
+            if (!inCalculationOptions.AllowExtrapolation && !_Models.IsDateInRange(inCalculationOptions.EndDate))
             {
                 throw new GeoMagExceptionOutOfRange(string.Format("Error: the date {0} is out of range for this model{1}The valid date range for the is {2} to {3}",
                     inCalculationOptions.EndDate.ToShortDateString(), Environment.NewLine, _Models.MinDate.ToDateTime().ToShortDateString(),
@@ -378,9 +389,6 @@ namespace GeoMagSharp
             ResultsOfCalculation = new List<MagneticCalculations>();
 
             _CalculationOptions = new CalculationOptions(inCalculationOptions);
-
-            var uncertainty = UncertaintyDataProvider.GetUncertainty(
-                _Models.Type, _CalculationOptions.ModelCategoryOverride);
 
             while (dateIdx <= timespan.Days)
             {
@@ -415,7 +423,12 @@ namespace GeoMagSharp
                 {
                     if (magCalcDate.Uncertainty == null)
                     {
-                        magCalcDate.Uncertainty = uncertainty;
+                        double h = magCalcDate.HorizontalIntensity != null ? magCalcDate.HorizontalIntensity.Value : 0.0;
+                        magCalcDate.Uncertainty = UncertaintyDataProvider.GetUncertainty(
+                            _Models.Type,
+                            _CalculationOptions.ModelCategoryOverride,
+                            _CalculationOptions.UncertaintyPreference,
+                            h);
                     }
                     ApplyDepthCorrection(magCalcDate, _CalculationOptions);
                     ResultsOfCalculation.Add(magCalcDate);
@@ -569,14 +582,21 @@ namespace GeoMagSharp
 
             if (magCalc.Uncertainty != null)
             {
+                var u = magCalc.Uncertainty;
                 magCalc.Uncertainty = new GeomagneticUncertainty
                 {
-                    ModelCategory = magCalc.Uncertainty.ModelCategory,
-                    Declination = magCalc.Uncertainty.Declination,
-                    BhDependentDec = magCalc.Uncertainty.BhDependentDec,
-                    TotalField = magCalc.Uncertainty.TotalField,
-                    DipAngle = magCalc.Uncertainty.DipAngle,
-                    Revision = magCalc.Uncertainty.Revision,
+                    Source = u.Source,
+                    ModelCategory = u.ModelCategory,
+                    Revision = u.Revision,
+                    Declination = u.Declination,
+                    Inclination = u.Inclination,
+                    TotalField = u.TotalField,
+                    HorizontalIntensity = u.HorizontalIntensity,
+                    NorthComp = u.NorthComp,
+                    EastComp = u.EastComp,
+                    VerticalComp = u.VerticalComp,
+                    BhDependentDec = u.BhDependentDec,
+                    HighResolutionCoverage = u.HighResolutionCoverage,
                     DepthAzimuthUncertainty = DepthCorrection.DepthAzimuthUncertaintyDeg
                 };
             }
