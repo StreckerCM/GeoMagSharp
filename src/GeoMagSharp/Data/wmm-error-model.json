@@ -1,0 +1,30 @@
+{
+  "source": "US/UK World Magnetic Model 2025-2030 Technical Report (Chulliat et al., 2025), Section 3.4",
+  "reference": "https://doi.org/10.25923/prbc-s316",
+  "models": {
+    "WMM2025": {
+      "validFrom": 2025.0,
+      "validTo": 2030.0,
+      "northIntensity": 137,
+      "eastIntensity": 89,
+      "verticalIntensity": 141,
+      "horizontalIntensity": 133,
+      "totalField": 138,
+      "inclination": 0.20,
+      "declinationBase": 0.26,
+      "declinationCoeff": 5417
+    },
+    "WMMHR2025": {
+      "validFrom": 2025.0,
+      "validTo": 2030.0,
+      "northIntensity": 135,
+      "eastIntensity": 85,
+      "verticalIntensity": 134,
+      "horizontalIntensity": 130,
+      "totalField": 134,
+      "inclination": 0.19,
+      "declinationBase": 0.25,
+      "declinationCoeff": 5205
+    }
+  }
+}

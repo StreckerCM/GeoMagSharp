@@ -267,6 +267,37 @@ namespace GeoMagSharp_UnitTests.Discovery
         }
 
         [TestMethod]
+        public void DiscoverModels_UseCache_SecondRun_PreservesTier1Metadata()
+        {
+            // Regression for #31: cache-hit reconstruction in ModelDiscovery
+            // must rebuild ModelDescriptor with all Tier 1 fields, not just the
+            // 5 base fields. Without this, callers see degree/altitude populated
+            // on first launch and silently null on every subsequent launch.
+            using (var fx = new TestFolderFixture())
+            {
+                fx.CopyFixture("IGRF14_multiepoch.COF", "IGRF14.COF");
+                var opts = new ModelDiscoveryOptions { UseCache = true };
+
+                var first = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(13, first[0].MaxDegree, "first scan: degree from header");
+                Assert.AreEqual(-1.0, first[0].MinAltitudeKm, "first scan: altitude from header");
+                Assert.AreEqual(6, first[0].EpochCount, "first scan: counted epoch headers");
+
+                var second = ModelDiscovery.DiscoverModels(fx.FolderPath, opts).ToList();
+                Assert.AreEqual(13, second[0].MaxDegree,
+                    "cache-hit reconstruction must preserve MaxDegree");
+                Assert.AreEqual(8, second[0].SecularVariationDegree,
+                    "cache-hit reconstruction must preserve SecularVariationDegree");
+                Assert.AreEqual(-1.0, second[0].MinAltitudeKm,
+                    "cache-hit reconstruction must preserve MinAltitudeKm");
+                Assert.AreEqual(600.0, second[0].MaxAltitudeKm,
+                    "cache-hit reconstruction must preserve MaxAltitudeKm");
+                Assert.AreEqual(6, second[0].EpochCount,
+                    "cache-hit reconstruction must preserve EpochCount");
+            }
+        }
+
+        [TestMethod]
         public void DiscoverModels_UseCache_FileMtimeChanged_RescansThatFile()
         {
             using (var fx = new TestFolderFixture())

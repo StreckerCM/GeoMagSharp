@@ -38,6 +38,10 @@ namespace GeoMagSharp
             SurveyDepthMeters = null;
             WellboreAzimuthDeg = null;
             WellboreInclinationDeg = null;
+
+            AllowExtrapolation = false;
+
+            UncertaintyPreference = UncertaintyModelPreference.Auto;
         }
 
         /// <summary>
@@ -62,6 +66,10 @@ namespace GeoMagSharp
             SurveyDepthMeters = other.SurveyDepthMeters;
             WellboreAzimuthDeg = other.WellboreAzimuthDeg;
             WellboreInclinationDeg = other.WellboreInclinationDeg;
+
+            AllowExtrapolation = other.AllowExtrapolation;
+
+            UncertaintyPreference = other.UncertaintyPreference;
         }
 
         #endregion
@@ -109,6 +117,30 @@ namespace GeoMagSharp
         /// Wellbore inclination (degrees, 0-180). Null to skip tool-frame error calculations (Eq 5-8).
         /// </summary>
         public double? WellboreInclinationDeg { get; set; }
+
+        /// <summary>
+        /// When <c>true</c>, <see cref="GeoMag.MagneticCalculations"/> and
+        /// <see cref="GeoMag.MagneticCalculationsAsync"/> skip the date-range check
+        /// against the loaded model's <c>MinDate</c>/<c>MaxDate</c>. Default is
+        /// <c>false</c> — strict; out-of-range dates throw <c>GeoMagExceptionOutOfRange</c>.
+        /// Set to <c>true</c> only when raw extrapolation is intentional (research,
+        /// model comparison studies). The underlying calculation engine may still
+        /// produce nonsense values past the model's validity range; for HDGM the
+        /// native sentinel inside <c>HDGMCalculationAdapter</c> remains the last guard.
+        /// </summary>
+        public bool AllowExtrapolation { get; set; }
+
+        /// <summary>
+        /// Selects which uncertainty model to consult when populating
+        /// <see cref="MagneticCalculations.Uncertainty"/>. Default is
+        /// <see cref="UncertaintyModelPreference.Auto"/>: the model's native
+        /// error model is used when available (WMM/WMMHR have one; HDGM provides
+        /// per-point sigmas via the DLL), and ISCWSA Level 1 is used otherwise.
+        /// Set to <see cref="UncertaintyModelPreference.Iscwsa"/> to force ISCWSA
+        /// for all models, or <see cref="UncertaintyModelPreference.Native"/> to
+        /// require the native model (throws if the loaded model has none).
+        /// </summary>
+        public UncertaintyModelPreference UncertaintyPreference { get; set; }
 
         #region Getters & Setters
 

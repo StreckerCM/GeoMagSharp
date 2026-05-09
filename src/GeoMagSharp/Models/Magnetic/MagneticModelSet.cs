@@ -39,7 +39,7 @@ namespace GeoMagSharp
         /// <see cref="GeoMagExceptionModelNotLoaded"/>. To use HDGM with multiple GeoMag
         /// instances, load the DLL separately into each (via
         /// <see cref="GeoMag.LoadModel(string)"/> or
-        /// <see cref="GeoMag.LoadModel(INativeHdgmInvoker, string)"/>).
+        /// <see cref="GeoMag.LoadModel(INativeHdgmInvoker, string, double, double)"/>).
         /// </remarks>
         /// <param name="other">The source model set to copy.</param>
         public MagneticModelSet(MagneticModelSet other)
